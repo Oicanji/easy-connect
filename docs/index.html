@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Easy Connect</title>
+  <style>
+    :root {
+      --bg: #16181d;
+      --card: #1e232b;
+      --border: #2c3440;
+      --text: #e6e8ec;
+      --muted: #9aa3ae;
+      --accent: #2f9e8f;
+      --accent-text: #08110f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Segoe UI, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 72px 24px;
+    }
+    img.logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+    }
+    h1 {
+      margin: 18px 0 6px;
+      font-size: 34px;
+      font-weight: 650;
+    }
+    .version, p {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .card {
+      margin-top: 32px;
+      padding: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+    a.button {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a.primary {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+    a.ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    footer {
+      margin-top: 48px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src="icon.png" alt="Easy Connect">
+    <h1>Easy Connect</h1>
+    <div class="version">v0.0.4</div>
+    <p>
+      Gerencie sessões SSH de VMs com senha mestre, comandos globais no terminal
+      e integração rápida com Claude Code, Cursor, Antigravity e Codex.
+    </p>
+    <div class="card">
+      <p>Baixe a versão mais recente para Windows.</p>
+      <div class="row">
+        <a class="button primary" href="https://github.com/Oicanji/easy-connect/releases/latest/download/EasyConnect-Setup.exe">Baixar instalador</a>
+        <a class="button ghost" href="https://github.com/Oicanji/easy-connect/releases/latest/download/EasyConnect-Portable.zip">Baixar aplicativo (ZIP)</a>
+      </div>
+    </div>
+    <footer>
+      Feito por Ignacio Sepúlveda ·
+      <a href="https://github.com/Oicanji/easy-connect">Código no GitHub</a>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,30 @@
+[project]
+name = "easy-connect"
+version = "0.0.4"
+description = "Desktop app to manage SSH VM connections and global terminal commands"
+requires-python = ">=3.11"
+dependencies = [
+    "PySide6>=6.7",
+    "cryptography>=43",
+    "argon2-cffi>=23",
+    "keyring>=25",
+    "pydantic>=2",
+]
+
+[project.scripts]
+easy-connect = "easy_connect.app:main"
+easy-connect-cli = "easy_connect.cli:main"
+easy-connect-askpass = "easy_connect.cli:askpass_main"
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+easy_connect = ["resources/*"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
