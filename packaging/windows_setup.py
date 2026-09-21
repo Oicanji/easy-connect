@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import ctypes
@@ -10,7 +11,7 @@ from pathlib import Path
 
 
 APP_NAME = "Easy Connect"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 PUBLISHER = "Easy Connect"
 EXE_NAME = "EasyConnect.exe"
 UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\EasyConnect"
@@ -205,7 +206,7 @@ def copy_payload(source: Path, dest: Path, progress) -> None:
             shutil.rmtree(dest)
         except OSError as exc:
             raise RuntimeError(
-                "NÃƒÂ£o foi possÃƒÂ­vel substituir os arquivos. Feche o Easy Connect e tente novamente."
+                "Não foi possível substituir os arquivos. Feche o Easy Connect e tente novamente."
             ) from exc
     files = [path for path in source.rglob("*") if path.is_file()]
     total = max(len(files), 1)
@@ -220,12 +221,12 @@ def copy_payload(source: Path, dest: Path, progress) -> None:
 def install(dest: Path, desktop: bool, progress, status) -> Path:
     source = payload_dir()
     if not source.is_dir():
-        raise FileNotFoundError("Pacote do Easy Connect nÃƒÂ£o encontrado.")
+        raise FileNotFoundError("Pacote do Easy Connect não encontrado.")
     status("Copiando arquivos...")
     copy_payload(source, dest, progress)
     exe = dest / EXE_NAME
     if not exe.is_file():
-        raise FileNotFoundError("EasyConnect.exe nÃƒÂ£o foi copiado.")
+        raise FileNotFoundError("EasyConnect.exe não foi copiado.")
     start_dir = start_menu_dir()
     start_link = start_dir / f"{APP_NAME}.lnk"
     desktop_link = desktop_dir() / f"{APP_NAME}.lnk"
@@ -235,10 +236,10 @@ def install(dest: Path, desktop: bool, progress, status) -> Path:
         create_shortcut(desktop_link, exe, dest)
     elif desktop_link.is_file():
         desktop_link.unlink()
-    status("Registrando desinstalaÃƒÂ§ÃƒÂ£o...")
+    status("Registrando desinstalação...")
     write_uninstaller(dest, desktop_link, start_link)
     write_uninstall_registry(dest)
-    status("InstalaÃƒÂ§ÃƒÂ£o concluÃƒÂ­da.")
+    status("Instalação concluída.")
     return exe
 
 
@@ -367,7 +368,7 @@ def run_gui() -> int:
 
     badge = tk.Label(
         side_inner,
-        text="Administrador" if is_admin() else "UsuÃƒÂ¡rio atual",
+        text="Administrador" if is_admin() else "Usuário atual",
         bg="#1a3d38" if is_admin() else "#2a2320",
         fg=ACCENT if is_admin() else "#d7b56d",
         font=("Segoe UI", 8, "bold"),
@@ -400,8 +401,8 @@ def run_gui() -> int:
     tk.Label(
         setup_page,
         text=(
-            "O aplicativo serÃƒÂ¡ instalado neste computador, com atalho no menu Iniciar. "
-            "Com permissÃƒÂ£o de administrador, a pasta padrÃƒÂ£o ÃƒÂ© Program Files."
+            "O aplicativo será instalado neste computador, com atalho no menu Iniciar. "
+            "Com permissão de administrador, a pasta padrão é Program Files."
         ),
         bg=BG,
         fg=MUTED,
@@ -413,7 +414,7 @@ def run_gui() -> int:
 
     tk.Label(
         setup_page,
-        text="PASTA DE INSTALAÃƒâ€¡ÃƒÆ’O",
+        text="PASTA DE INSTALAÇÃO",
         bg=BG,
         fg=MUTED,
         font=("Segoe UI", 8, "bold"),
@@ -458,7 +459,7 @@ def run_gui() -> int:
 
     desktop_box = tk.Checkbutton(
         setup_page,
-        text="Criar atalho na ÃƒÂ¡rea de trabalho",
+        text="Criar atalho na área de trabalho",
         variable=desktop_var,
         bg=BG,
         fg=TEXT,
@@ -506,7 +507,7 @@ def run_gui() -> int:
 
     tk.Label(
         done_page,
-        text="InstalaÃƒÂ§ÃƒÂ£o concluÃƒÂ­da",
+        text="Instalação concluída",
         bg=BG,
         fg=TEXT,
         font=("Segoe UI", 20, "bold"),
@@ -515,7 +516,7 @@ def run_gui() -> int:
     ).pack(fill="x")
     tk.Label(
         done_page,
-        text="O Easy Connect estÃƒÂ¡ pronto para uso. VocÃƒÂª pode abrir o aplicativo agora ou fechar o instalador.",
+        text="O Easy Connect está pronto para uso. Você pode abrir o aplicativo agora ou fechar o instalador.",
         bg=BG,
         fg=MUTED,
         font=("Segoe UI", 10),
@@ -547,12 +548,12 @@ def run_gui() -> int:
     def refresh_hint(*_args) -> None:
         if is_admin():
             admin_hint.configure(
-                text="Instalando com permissÃƒÂ£o de administrador. Atalhos e registro valem para todos os usuÃƒÂ¡rios."
+                text="Instalando com permissão de administrador. Atalhos e registro valem para todos os usuários."
             )
             elevate_btn.pack_forget()
         else:
             admin_hint.configure(
-                text="Sem elevaÃƒÂ§ÃƒÂ£o, a instalaÃƒÂ§ÃƒÂ£o fica sÃƒÂ³ no seu usuÃƒÂ¡rio. Use administrador para instalar em Program Files."
+                text="Sem elevação, a instalação fica só no seu usuário. Use administrador para instalar em Program Files."
             )
             elevate_btn.pack(side="left")
 
@@ -572,7 +573,7 @@ def run_gui() -> int:
         if relaunch_as_admin(args):
             root.destroy()
         else:
-            status_var.set("A permissÃƒÂ£o de administrador foi recusada.")
+            status_var.set("A permissão de administrador foi recusada.")
             status_label.configure(fg=DANGER)
 
     def on_install() -> None:
@@ -589,7 +590,7 @@ def run_gui() -> int:
             ):
                 root.destroy()
                 return
-            status_var.set("Esta pasta exige permissÃƒÂ£o de administrador.")
+            status_var.set("Esta pasta exige permissão de administrador.")
             status_label.configure(fg=DANGER)
             return
         set_busy(True)

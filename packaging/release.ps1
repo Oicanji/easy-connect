@@ -95,9 +95,11 @@ function Update-VersionFiles {
         if (-not (Test-Path $path)) {
             throw "Arquivo nao encontrado: $path"
         }
-        $text = [System.IO.File]::ReadAllText($path, [System.Text.UTF8Encoding]::new($false))
-        if ([string]::IsNullOrEmpty($text)) {
-            $text = [System.IO.File]::ReadAllText($path)
+        $bytes = [System.IO.File]::ReadAllBytes($path)
+        if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            $text = [System.Text.Encoding]::UTF8.GetString($bytes, 3, $bytes.Length - 3)
+        } else {
+            $text = [System.Text.Encoding]::UTF8.GetString($bytes)
         }
         $updated = & $files[$path] $text
         if ($updated -eq $text -and $OldVersion -ne $NewVersion) {
@@ -144,6 +146,8 @@ function Invoke-PyInstaller {
 
     $previous = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
+    $env:PYTHONUTF8 = "1"
+    $env:PYTHONIOENCODING = "utf-8"
     & $Python -m PyInstaller --noconfirm --clean $SpecPath
     $code = $LASTEXITCODE
     $ErrorActionPreference = $previous

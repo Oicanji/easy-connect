@@ -19,7 +19,6 @@ from easy_connect import __version__, app_title
 from easy_connect.core.commands import (
     install_wrapper,
     next_available_command,
-    path_notice,
     remove_wrapper,
 )
 from easy_connect.core.models import Connection
@@ -155,7 +154,6 @@ class MainWindow(QMainWindow):
             remove_wrapper(previous_command)
         self.session.upsert(connection)
         install_wrapper(connection.command)
-        first_install = not self.session.payload.settings.path_installed
         self.session.payload.settings.path_installed = True
         self.session.save()
         rewritten = self._rewrite_instruction(connection)
@@ -164,8 +162,6 @@ class MainWindow(QMainWindow):
         if rewritten:
             message = f"Comando {connection.command} pronto. Instruções da LLM atualizadas."
         self.statusBar().showMessage(message, 5000)
-        if first_install:
-            QMessageBox.information(self, "Easy Connect", path_notice())
 
     def _rewrite_instruction(self, connection: Connection) -> bool:
         try:

@@ -2,6 +2,12 @@
 
 Todas as versões publicadas do Easy Connect.
 
+## 1.0.2 - 2026-09-21
+
+- Corrigido o encoding do instalador Windows (acentos e Ç).
+- Removido o popup desnecessário após a primeira configuração do cofre/comando.
+- Página de download com ícones dos agentes, nota de CLI e footer atualizado.
+
 ## 1.0.1 - 2026-09-21
 
 - Primeira versão pública estável.

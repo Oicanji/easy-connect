@@ -176,6 +176,34 @@
       .agents {
         margin-top: 16px;
       }
+      .agent-icons {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin: 4px 0 14px;
+      }
+      .agent-icons img {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: #12151a;
+        border: 1px solid var(--border);
+      }
+      .agent-note {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .agent-optional {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
       .changelog {
         margin-top: 16px;
       }
@@ -209,11 +237,51 @@
         display: none;
       }
       .license {
-        margin-top: 36px;
-        text-align: center;
+        display: none;
       }
-      .license a {
+      .site-footer {
+        max-width: 820px;
+        margin: 40px auto 0;
+        padding: 0 24px;
+      }
+      .footer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 18px 0 22px;
+      }
+      .footer-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .footer-copy {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+        text-align: right;
+      }
+      .footer-copy a {
         color: var(--accent);
+      }
+      .footer-bar {
+        background: var(--accent);
+        color: #08110f;
+        text-align: center;
+        padding: 14px 16px;
+        font-size: 13px;
+        font-weight: 650;
+      }
+      .footer-bar a {
+        color: #08110f;
+        text-decoration: none;
+      }
+      .footer-bar a:hover {
+        text-decoration: underline;
       }
       @keyframes rise {
         from {
@@ -238,6 +306,13 @@
         .downloads {
           grid-template-columns: 1fr;
         }
+        .footer-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .footer-copy {
+          text-align: left;
+        }
       }
     </style>
   </head>
@@ -248,7 +323,7 @@
           <img src="icon.png" alt="Easy Connect" />
         </div>
         <h1>Easy Connect</h1>
-        <div class="version">v1.0.1</div>
+        <div class="version">v1.0.2</div>
         <p class="lead">
           <b>Automação de acesso às suas VMs com segurança!</b> Um comando
           simples e você ou seu LLM já se conecta ao seu servidor, sem expor
@@ -351,28 +426,20 @@
           <div class="os-head">
             <h2>Agentes LLM (opcional)</h2>
           </div>
-          <ul class="reqs">
-            <li>
-              Cursor: CLI <code>agent</code> —
-              <code>irm 'https://cursor.com/install?win32=true' | iex</code>
-            </li>
-            <li>
-              Antigravity: CLI <code>agy</code> —
-              <code>irm https://antigravity.google/cli/install.ps1 | iex</code>
-            </li>
-            <li>
-              Codex: CLI <code>codex</code> —
-              <code>irm https://chatgpt.com/codex/install.ps1 | iex</code>
-            </li>
-            <li>
-              Claude Code: CLI <code>claude</code> —
-              <code>npm install -g @anthropic-ai/claude-code</code>
-            </li>
-            <li>
-              Totalmente opcional, você pode apenas pedir para o LLM ou
-              ferramenta executar o comando EX:`ssh-10-142-0-31` diretamente.
-            </li>
-          </ul>
+          <div class="agent-icons" aria-label="Agentes suportados">
+            <img src="agents/claude_code.png" alt="Claude Code" title="Claude Code" />
+            <img src="agents/cursor.png" alt="Cursor" title="Cursor" />
+            <img src="agents/antigravity.png" alt="Antigravity" title="Antigravity" />
+            <img src="agents/codex.png" alt="Codex" title="Codex" />
+          </div>
+          <p class="agent-note">
+            Necessário utilização de CLI do respectivo agente baixado via
+            irm/npm.
+          </p>
+          <p class="agent-optional">
+            Totalmente opcional, você pode apenas pedir para o LLM ou ferramenta
+            executar o comando EX:<code>ssh-10-142-0-31</code> diretamente.
+          </p>
         </article>
       </section>
 
@@ -386,11 +453,27 @@
             id="changelog-version"
             aria-label="Versão do changelog"
           >
-            <option value="v101" selected>v1.0.1</option>
+            <option value="v102" selected>v1.0.2</option>
+            <option value="v101">v1.0.1</option>
             <option value="v005">v0.0.5</option>
             <option value="v004">v0.0.4</option>
           </select>
-          <div class="changelog-notes" id="v101">
+          <div class="changelog-notes" id="v102">
+            <ul>
+              <li>
+                Corrigido o encoding do instalador Windows (acentos e Ç).
+              </li>
+              <li>
+                Removido o popup desnecessário após a primeira configuração do
+                cofre/comando.
+              </li>
+              <li>
+                Página de download com ícones dos agentes, nota de CLI e footer
+                atualizado.
+              </li>
+            </ul>
+          </div>
+          <div class="changelog-notes" id="v101" hidden>
             <ul>
               <li>Primeira versão pública estável.</li>
               <li>
@@ -466,19 +549,32 @@
         </article>
       </section>
 
-      <section class="license">
-        <p>
-          Aplicativo de uso livre, licenciado em
-          <a href="https://github.com/Oicanji/easy-connect/blob/main/LICENSE"
-            >CC0 1.0</a
-          >. Reprodução e distribuição são permitidas, com os devidos créditos a
-          Ignacio Sepúlveda. Histórico completo em
-          <a href="https://github.com/Oicanji/easy-connect/blob/main/CHANGELOG.md"
-            >CHANGELOG.md</a
-          >.
-        </p>
+      <section class="site-footer">
+        <div class="footer-row">
+          <img
+            class="footer-avatar"
+            src="https://avatars.githubusercontent.com/u/51388779"
+            alt="Ignacio Sepúlveda"
+          />
+          <p class="footer-copy">
+            Aplicativo de uso livre, licenciado em
+            <a href="https://github.com/Oicanji/easy-connect/blob/main/LICENSE"
+              >CC0 1.0</a
+            >. Reprodução e distribuição são permitidas, com os devidos créditos
+            a Ignacio Sepúlveda. Histórico completo em
+            <a
+              href="https://github.com/Oicanji/easy-connect/blob/main/CHANGELOG.md"
+              >CHANGELOG.md</a
+            >.
+          </p>
+        </div>
       </section>
     </main>
+    <div class="footer-bar">
+      <a href="https://github.com/Oicanji/easy-connect"
+        >github.com/Oicanji/easy-connect</a
+      >
+    </div>
     <script>
       (function () {
         var select = document.getElementById("changelog-version");
