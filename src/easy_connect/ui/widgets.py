@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
-from PySide6.QtCore import QRect, Qt, Signal
+from PySide6.QtCore import QPoint, QRect, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -15,18 +16,80 @@ from PySide6.QtWidgets import (
 )
 
 
-def copy_icon() -> QIcon:
-    pixmap = QPixmap(18, 18)
+def _paint_icon(size: int, draw) -> QIcon:
+    pixmap = QPixmap(size, size)
     pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    painter.setPen(QPen(QColor("#9aa3ae"), 1.4))
-    painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawRoundedRect(QRect(6, 2, 9, 11), 2, 2)
-    painter.setBrush(QColor("#16181d"))
-    painter.drawRoundedRect(QRect(2, 6, 9, 11), 2, 2)
+    draw(painter, size)
     painter.end()
     return QIcon(pixmap)
+
+
+def copy_icon(color: str = "#6b7380") -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        painter.setPen(QPen(QColor(color), 1.3))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(QRect(6, 2, 9, 10), 2, 2)
+        painter.drawRoundedRect(QRect(2, 6, 9, 10), 2, 2)
+
+    return _paint_icon(18, draw)
+
+
+def plus_icon(color: str = "#c5ced6") -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        painter.setPen(QPen(QColor(color), 1.6))
+        mid = size // 2
+        painter.drawLine(mid, 4, mid, size - 4)
+        painter.drawLine(4, mid, size - 4, mid)
+
+    return _paint_icon(18, draw)
+
+
+def robot_icon(color: str = "#c5ced6") -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        pen = QPen(QColor(color), 1.4)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(QRect(3, 6, 12, 10), 3, 3)
+        painter.drawLine(9, 3, 9, 6)
+        painter.drawEllipse(QPoint(9, 3), 1, 1)
+        painter.setBrush(QColor(color))
+        painter.drawEllipse(QPoint(6, 10), 1, 1)
+        painter.drawEllipse(QPoint(12, 10), 1, 1)
+
+    return _paint_icon(18, draw)
+
+
+def document_icon(color: str = "#c5ced6") -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        painter.setPen(QPen(QColor(color), 1.3))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(QRect(4, 2, 10, 14), 2, 2)
+        painter.drawLine(7, 6, 13, 6)
+        painter.drawLine(7, 9, 13, 9)
+        painter.drawLine(7, 12, 11, 12)
+
+    return _paint_icon(18, draw)
+
+
+def close_icon(color: str = "#e07a7f") -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        painter.setPen(QPen(QColor(color), 1.6))
+        painter.drawLine(5, 5, size - 5, size - 5)
+        painter.drawLine(size - 5, 5, 5, size - 5)
+
+    return _paint_icon(18, draw)
+
+
+def pencil_icon(color: str = "#6cb6ff") -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        painter.setPen(QPen(QColor(color), 1.5))
+        painter.drawLine(4, size - 5, size - 6, 5)
+        painter.drawLine(size - 6, 5, size - 4, 7)
+        painter.drawLine(4, size - 5, 6, size - 3)
+
+    return _paint_icon(18, draw)
 
 
 def copy_to_clipboard(text: str) -> None:
@@ -39,10 +102,12 @@ class CopyButton(QPushButton):
     def __init__(self, text: str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._value = text
-        self.setObjectName("Copy")
+        self.setObjectName("InlineCopy")
         self.setIcon(copy_icon())
         self.setToolTip("Copiar")
-        self.setFixedSize(30, 30)
+        self.setFlat(True)
+        self.setFixedSize(18, 18)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clicked.connect(self._copy)
 
     def set_value(self, text: str) -> None:
@@ -57,13 +122,15 @@ class CopyRow(QWidget):
         super().__init__(parent)
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setSpacing(4)
         self.label = QLabel(text)
         self.label.setObjectName("Hint")
         self.label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.label.setWordWrap(False)
+        self.label.setTextFormat(Qt.TextFormat.PlainText)
         self.button = CopyButton(text)
         layout.addWidget(self.label, 1)
-        layout.addWidget(self.button, 0)
+        layout.addWidget(self.button, 0, Qt.AlignmentFlag.AlignVCenter)
 
 
 class FilePicker(QWidget):
@@ -73,12 +140,14 @@ class FilePicker(QWidget):
         self,
         placeholder: str,
         caption: str,
-        file_filter: str,
+        file_filter: str = "",
         parent: QWidget | None = None,
+        directory: bool = False,
     ) -> None:
         super().__init__(parent)
         self._caption = caption
         self._filter = file_filter
+        self._directory = directory
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
@@ -101,10 +170,29 @@ class FilePicker(QWidget):
         self.path_changed.emit(self.path())
 
     def _browse(self) -> None:
-        start = self.path() or str(Path.home() / ".ssh")
-        if not Path(start).exists():
-            start = str(Path.home())
-        chosen, _ = QFileDialog.getOpenFileName(self, self._caption, start, self._filter)
+        start = self._start_path()
+        if self._directory:
+            chosen = QFileDialog.getExistingDirectory(self, self._caption, start)
+        else:
+            chosen, _ = QFileDialog.getOpenFileName(self, self._caption, start, self._filter)
         if chosen:
             self.edit.setText(chosen)
             self._emit_path()
+
+    def _start_path(self) -> str:
+        current = self.path()
+        if current:
+            path = Path(current)
+            if path.is_file():
+                return str(path.parent)
+            if path.exists():
+                return str(path)
+        if self._directory:
+            programs = Path(os.environ.get("LOCALAPPDATA") or "") / "Programs"
+            if programs.is_dir():
+                return str(programs)
+            return str(Path.home())
+        ssh = Path.home() / ".ssh"
+        if ssh.exists():
+            return str(ssh)
+        return str(Path.home())

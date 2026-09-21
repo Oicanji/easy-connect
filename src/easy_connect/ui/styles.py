@@ -117,10 +117,76 @@ QPushButton#Ghost {
     color: #9aa3ae;
     padding: 4px 8px;
 }
-QPushButton#Copy {
-    min-width: 30px;
-    max-width: 30px;
-    padding: 4px;
+QPushButton#Ghost:hover {
+    color: #e6e8ec;
+    background-color: #242b34;
+}
+QPushButton#InlineCopy {
+    background: transparent;
+    border: none;
+    padding: 0;
+    min-width: 18px;
+    max-width: 18px;
+    min-height: 18px;
+}
+QPushButton#InlineCopy:hover {
+    background: transparent;
+    border: none;
+}
+QPushButton#Plus {
+    background: transparent;
+    color: #c5ced6;
+    border: 1px solid #323b47;
+    border-radius: 8px;
+    min-width: 32px;
+    max-width: 32px;
+    min-height: 32px;
+    padding: 0;
+}
+QPushButton#Plus:hover {
+    background-color: #242b34;
+    border: 1px solid #3a4656;
+}
+QPushButton#EditLink {
+    background: transparent;
+    border: 1px solid #355a7a;
+    border-radius: 8px;
+    color: #6cb6ff;
+    padding: 6px 10px;
+}
+QPushButton#EditLink:hover {
+    background-color: #1b2836;
+    color: #8cc6ff;
+    border: 1px solid #4a7aa0;
+}
+QPushButton#DangerGhost {
+    background: transparent;
+    border: 1px solid #5a3236;
+    border-radius: 8px;
+    color: #e07a7f;
+    padding: 6px 10px;
+}
+QPushButton#DangerGhost:hover {
+    background-color: #3a2225;
+    border: 1px solid #7a4448;
+}
+QToolButton#Ghost {
+    background: transparent;
+    border: none;
+    color: #9aa3ae;
+    padding: 4px 8px;
+}
+QToolButton#Ghost:hover {
+    color: #e6e8ec;
+    background-color: #242b34;
+}
+QToolButton#Ghost::menu-indicator {
+    image: none;
+}
+QLabel#Credit {
+    color: #5c6570;
+    font-size: 11px;
+    background: transparent;
 }
 QMenu {
     background-color: #1e232b;
@@ -286,6 +352,46 @@ QPushButton#Ghost {
     background: transparent;
     border: none;
     color: #5b6773;
+}
+QPushButton#InlineCopy {
+    background: transparent;
+    border: none;
+    padding: 0;
+    min-width: 18px;
+    max-width: 18px;
+}
+QPushButton#Plus {
+    background: transparent;
+    border: 1px solid #d5dde5;
+    border-radius: 8px;
+    min-width: 32px;
+    max-width: 32px;
+    min-height: 32px;
+    padding: 0;
+}
+QPushButton#EditLink {
+    background: transparent;
+    border: 1px solid #b7d3ef;
+    border-radius: 8px;
+    color: #2f7fd6;
+    padding: 6px 10px;
+}
+QPushButton#DangerGhost {
+    background: transparent;
+    border: 1px solid #efc4c6;
+    border-radius: 8px;
+    color: #c2474d;
+    padding: 6px 10px;
+}
+QToolButton#Ghost {
+    background: transparent;
+    border: none;
+    color: #5b6773;
+}
+QLabel#Credit {
+    color: #8a94a0;
+    font-size: 11px;
+    background: transparent;
 }
 QTabBar::tab {
     background: transparent;

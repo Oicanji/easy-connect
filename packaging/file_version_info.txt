@@ -1,8 +1,8 @@
 # UTF-8
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(0, 0, 4, 0),
-    prodvers=(0, 0, 4, 0),
+    filevers=(0, 0, 5, 0),
+    prodvers=(0, 0, 5, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -16,12 +16,12 @@ VSVersionInfo(
       StringTable(
         u'040904B0',
         [StringStruct(u'CompanyName', u'Easy Connect'),
-        StringStruct(u'FileDescription', u'Easy Connect v0.0.4'),
-        StringStruct(u'FileVersion', u'0.0.4'),
+        StringStruct(u'FileDescription', u'Easy Connect v0.0.5'),
+        StringStruct(u'FileVersion', u'0.0.5'),
         StringStruct(u'InternalName', u'EasyConnect'),
         StringStruct(u'OriginalFilename', u'EasyConnect.exe'),
         StringStruct(u'ProductName', u'Easy Connect'),
-        StringStruct(u'ProductVersion', u'0.0.4')])
+        StringStruct(u'ProductVersion', u'0.0.5')])
       ]),
     VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
   ]

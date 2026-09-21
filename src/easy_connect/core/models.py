@@ -101,6 +101,7 @@ class AppSettings(BaseModel):
     vpn_check_port: int = 443
     theme: str = "dark"
     path_installed: bool = False
+    agent_paths: dict[str, str] = Field(default_factory=dict)
 
 
 class VaultPayload(BaseModel):

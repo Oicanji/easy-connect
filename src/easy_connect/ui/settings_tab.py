@@ -15,8 +15,9 @@ from PySide6.QtWidgets import (
 
 from easy_connect.core.commands import path_notice, python_display, reinstall_wrappers, wrappers_dir
 from easy_connect.core.session import AppSession
+from easy_connect.llm.actions import TOOLS
 from easy_connect.ui.styles import apply_theme
-from easy_connect.ui.widgets import CopyButton
+from easy_connect.ui.widgets import CopyButton, FilePicker
 
 
 class SettingsTab(QWidget):
@@ -59,6 +60,32 @@ class SettingsTab(QWidget):
         form.addRow("Tema", self.theme)
         root.addLayout(form)
 
+        agents = QLabel("AGENTES")
+        agents.setObjectName("Section")
+        root.addWidget(agents)
+
+        agent_form = QFormLayout()
+        saved_paths = session.payload.settings.agent_paths
+        self._agent_pickers: dict[str, FilePicker] = {}
+        for tool_id, tool_label in TOOLS:
+            picker = FilePicker(
+                "Pasta de instalação",
+                f"Selecionar pasta do {tool_label}",
+                directory=True,
+            )
+            picker.set_path(str(saved_paths.get(tool_id) or ""))
+            self._agent_pickers[tool_id] = picker
+            agent_form.addRow(tool_label, picker)
+        root.addLayout(agent_form)
+
+        agent_hint = QLabel(
+            "Se o Easy Connect não achar o CLI no PATH, selecione a pasta onde o "
+            "programa está instalado. O prompt continua copiado para colar no chat."
+        )
+        agent_hint.setObjectName("Hint")
+        agent_hint.setWordWrap(True)
+        root.addWidget(agent_hint)
+
         hint = QLabel(
             "Terminais já abertos não veem um PATH novo. Feche e abra o terminal "
             "depois de instalar o primeiro comando."
@@ -78,14 +105,13 @@ class SettingsTab(QWidget):
         buttons.addStretch()
         root.addLayout(buttons)
 
-        credit = QLabel(
-            'Easy Connect por Ignacio Sepúlveda · '
-            '<a href="https://github.com/Oicanji/easy-connect">github.com/Oicanji/easy-connect</a>'
-        )
-        credit.setObjectName("Hint")
-        credit.setOpenExternalLinks(True)
-        credit.setWordWrap(True)
+        credit = QLabel("Ignacio Sepúlveda")
+        credit.setObjectName("Credit")
+        link = QLabel('<a href="https://github.com/Oicanji/easy-connect">github.com/Oicanji/easy-connect</a>')
+        link.setObjectName("Credit")
+        link.setOpenExternalLinks(True)
         root.addWidget(credit)
+        root.addWidget(link)
         root.addStretch()
 
     def _with_copy(self, field: QLineEdit) -> QWidget:
@@ -103,6 +129,9 @@ class SettingsTab(QWidget):
         settings.vpn_check_host = self.vpn_host.text().strip()
         settings.vpn_check_port = int(self.vpn_port.value())
         settings.theme = self.theme.currentData()
+        settings.agent_paths = {
+            tool_id: picker.path() for tool_id, picker in self._agent_pickers.items()
+        }
         self.session.save()
         from PySide6.QtWidgets import QApplication
 

@@ -1,6 +1,6 @@
 [project]
 name = "easy-connect"
-version = "0.0.4"
+version = "0.0.5"
 description = "Acesso automatizado e seguro a VMs por SSH, com cofre local, regras e integracoes LLM"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
