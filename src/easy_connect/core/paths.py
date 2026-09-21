@@ -106,15 +106,19 @@ def package_search_path() -> Path:
 
 
 def icon_path() -> Path | None:
+    return resource_file("icon.png")
+
+
+def resource_file(name: str) -> Path | None:
     candidates = [
-        resource_base() / "resources" / "icon.png",
-        resource_base() / "easy_connect" / "resources" / "icon.png",
-        Path(__file__).resolve().parents[1] / "resources" / "icon.png",
-        Path(__file__).resolve().parents[3] / "ico.png",
-        Path(__file__).resolve().parents[3] / "src" / "easy_connect" / "resources" / "icon.png",
+        resource_base() / "easy_connect" / "resources" / name,
+        resource_base() / "resources" / name,
+        Path(__file__).resolve().parents[1] / "resources" / name,
+        Path(__file__).resolve().parents[3] / "src" / "easy_connect" / "resources" / name,
     ]
     if is_frozen():
-        candidates.insert(0, install_dir() / "icon.png")
+        candidates.insert(0, install_dir() / name)
+        candidates.insert(0, install_dir() / "resources" / name)
     for candidate in candidates:
         try:
             if candidate.is_file():

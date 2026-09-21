@@ -1,5 +1,5 @@
 #define MyAppName "Easy Connect"
-#define MyAppVersion "0.0.5"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "Easy Connect"
 #define MyAppExeName "EasyConnect.exe"
 #define MyAppId "{{8C3F1B2A-6D47-4E19-9A80-4B7E1D2A9C01}"

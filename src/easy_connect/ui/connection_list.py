@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import (
+    QDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -18,6 +19,7 @@ from easy_connect.core.integrations import launch_assistant, open_connected_term
 from easy_connect.core.models import Connection
 from easy_connect.core.session import AppSession
 from easy_connect.llm.actions import ACTIONS, TOOLS
+from easy_connect.ui.agent_prompt_dialog import AgentPromptDialog
 from easy_connect.ui.widgets import (
     CopyRow,
     close_icon,
@@ -67,11 +69,13 @@ class ConnectionCard(QFrame):
         tools.setSpacing(8)
         target = QLabel(f"{connection.username}@{connection.host}:{connection.port}")
         target.setObjectName("Subtitle")
-        agents = QPushButton(" Agentes")
+        agents = QToolButton()
         agents.setObjectName("Ghost")
+        agents.setText(" Agentes")
         agents.setIcon(robot_icon())
-        agents.clicked.connect(self._open_agents)
-        self._agents_button = agents
+        agents.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        agents.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        agents.setMenu(self._agents_menu())
         export = QPushButton(" Exportar regra")
         export.setObjectName("Ghost")
         export.setIcon(document_icon())
@@ -104,27 +108,18 @@ class ConnectionCard(QFrame):
             layout.addWidget(exported)
         layout.addLayout(footer)
 
-    def _open_agents(self) -> None:
+    def _agents_menu(self) -> QMenu:
         menu = QMenu(self)
+        menu.setObjectName("AgentsMenu")
         for tool_id, tool_label in TOOLS:
-            action = menu.addAction(tool_label)
-            action.setData(tool_id)
-        chosen = menu.exec(self._agents_button.mapToGlobal(self._agents_button.rect().bottomLeft()))
-        if chosen is None:
-            return
-        tool_id = str(chosen.data() or "")
-        if not tool_id:
-            return
-        actions = QMenu(self)
-        for action_id, action_label, _prompt in ACTIONS:
-            item = actions.addAction(action_label)
-            item.setData(action_id)
-        selected = actions.exec(QCursor.pos())
-        if selected is None:
-            return
-        action_id = str(selected.data() or "")
-        if action_id:
-            self._assist(tool_id, action_id)
+            submenu = menu.addMenu(tool_label)
+            submenu.setObjectName("AgentsMenu")
+            for action_id, action_label, _prompt in ACTIONS:
+                item = submenu.addAction(action_label)
+                item.triggered.connect(
+                    lambda _checked=False, t=tool_id, a=action_id: self._assist(t, a)
+                )
+        return menu
 
     def _connect(self) -> None:
         try:
@@ -132,10 +127,29 @@ class ConnectionCard(QFrame):
         except Exception as exc:
             QMessageBox.warning(self, "Easy Connect", str(exc))
 
-    def _assist(self, tool: str, action_id: str) -> None:
+    def _assist(
+        self,
+        tool: str,
+        action_id: str,
+        custom_prompt: str = "",
+        attachments: list[str] | None = None,
+    ) -> None:
         try:
+            if action_id == "custom" and not custom_prompt and not attachments:
+                dialog = AgentPromptDialog(tool, self.connection, self)
+                if dialog.exec() != QDialog.DialogCode.Accepted:
+                    return
+                custom_prompt = dialog.prompt_text()
+                attachments = dialog.attachments()
             configured = str(self.session.payload.settings.agent_paths.get(tool) or "")
-            message = launch_assistant(tool, action_id, self.connection, configured)
+            message = launch_assistant(
+                tool,
+                action_id,
+                self.connection,
+                configured,
+                custom_prompt=custom_prompt,
+                attachments=attachments,
+            )
             if message:
                 QMessageBox.information(self, "Easy Connect", message)
         except Exception as exc:

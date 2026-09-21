@@ -2,6 +2,15 @@
 
 Todas as versões publicadas do Easy Connect.
 
+## 1.0.1 - 2026-09-21
+
+- Primeira versão pública estável.
+- Menu de agentes em cascata, com ações extras de logs Docker e prompt personalizado.
+- Janela de conversa para o prompt customizado, com ícones dos agentes, anexos e envio por Enter.
+- Exportação de instrução LLM sem expor caminhos de chave privada ou pública.
+- Botão de adicionar arquivo de exportação ao lado do seletor de modelo.
+- Script `packaging/release.ps1` para bump de versão e compilação de instalador e pacote portátil.
+
 ## 0.0.5 - 2026-09-21
 
 - Os agentes Cursor, Antigravity, Codex e Claude passam a executar o CLI com a tarefa já no prompt, sem abrir o editor nem pedir para colar o texto.

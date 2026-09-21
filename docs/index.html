@@ -248,7 +248,7 @@
           <img src="icon.png" alt="Easy Connect" />
         </div>
         <h1>Easy Connect</h1>
-        <div class="version">v0.0.5</div>
+        <div class="version">v1.0.1</div>
         <p class="lead">
           <b>Automação de acesso às suas VMs com segurança!</b> Um comando
           simples e você ou seu LLM já se conecta ao seu servidor, sem expor
@@ -386,10 +386,36 @@
             id="changelog-version"
             aria-label="Versão do changelog"
           >
-            <option value="v005" selected>v0.0.5</option>
+            <option value="v101" selected>v1.0.1</option>
+            <option value="v005">v0.0.5</option>
             <option value="v004">v0.0.4</option>
           </select>
-          <div class="changelog-notes" id="v005">
+          <div class="changelog-notes" id="v101">
+            <ul>
+              <li>Primeira versão pública estável.</li>
+              <li>
+                Menu de agentes em cascata, com ações extras de logs Docker e
+                prompt personalizado.
+              </li>
+              <li>
+                Janela de conversa para o prompt customizado, com ícones dos
+                agentes, anexos e envio por Enter.
+              </li>
+              <li>
+                Exportação de instrução LLM sem expor caminhos de chave privada
+                ou pública.
+              </li>
+              <li>
+                Botão de adicionar arquivo de exportação ao lado do seletor de
+                modelo.
+              </li>
+              <li>
+                Script de release para bump de versão e compilação de instalador
+                e pacote portátil.
+              </li>
+            </ul>
+          </div>
+          <div class="changelog-notes" id="v005" hidden>
             <ul>
               <li>
                 Os agentes Cursor, Antigravity, Codex e Claude executam o CLI

@@ -92,6 +92,98 @@ def pencil_icon(color: str = "#6cb6ff") -> QIcon:
     return _paint_icon(18, draw)
 
 
+def paperclip_icon(color: str = "#9aa3ae") -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        painter.setPen(QPen(QColor(color), 1.5))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawArc(QRect(5, 3, 8, 8), 40 * 16, 200 * 16)
+        painter.drawLine(7, 10, 7, 14)
+        painter.drawArc(QRect(5, 11, 8, 6), -40 * 16, -200 * 16)
+
+    return _paint_icon(18, draw)
+
+
+def send_icon(color: str = "#08110f") -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(color))
+        mid = size // 2
+        painter.drawPolygon(
+            [
+                QPoint(4, 3),
+                QPoint(size - 3, mid),
+                QPoint(4, size - 3),
+                QPoint(6, mid),
+            ]
+        )
+
+    return _paint_icon(18, draw)
+
+
+TOOL_ICON_FILES = {
+    "claude": "claude_code.png",
+    "cursor": "cursor.png",
+    "antigravity": "antigravity.png",
+    "codex": "codex.png",
+}
+
+
+def tool_pixmap(tool: str, size: int = 40) -> QPixmap:
+    from easy_connect.core.paths import resource_file
+
+    name = TOOL_ICON_FILES.get(tool)
+    if name:
+        path = resource_file(name)
+        if path is not None:
+            pixmap = QPixmap(str(path))
+            if not pixmap.isNull():
+                return pixmap.scaled(
+                    size,
+                    size,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+    return tool_icon(tool, size=size).pixmap(size, size)
+
+
+def tool_icon(tool: str, size: int = 28, color: str = "#2f9e8f") -> QIcon:
+    from easy_connect.core.paths import resource_file
+
+    name = TOOL_ICON_FILES.get(tool)
+    if name:
+        path = resource_file(name)
+        if path is not None:
+            pixmap = QPixmap(str(path))
+            if not pixmap.isNull():
+                scaled = pixmap.scaled(
+                    size,
+                    size,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                return QIcon(scaled)
+
+    label = {
+        "claude": "C",
+        "cursor": "A",
+        "antigravity": "G",
+        "codex": "X",
+    }.get(tool, "?")
+
+    def draw(painter: QPainter, icon_size: int) -> None:
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(color))
+        painter.drawEllipse(1, 1, icon_size - 2, icon_size - 2)
+        painter.setPen(QColor("#08110f"))
+        font = painter.font()
+        font.setBold(True)
+        font.setPixelSize(max(10, icon_size // 2))
+        painter.setFont(font)
+        painter.drawText(QRect(0, 0, icon_size, icon_size), Qt.AlignmentFlag.AlignCenter, label)
+
+    return _paint_icon(size, draw)
+
+
 def copy_to_clipboard(text: str) -> None:
     clipboard = QApplication.clipboard()
     if clipboard is not None:

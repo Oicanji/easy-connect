@@ -94,11 +94,18 @@ def launch_assistant(
     action_id: str,
     connection: Connection,
     configured_path: str = "",
+    custom_prompt: str = "",
+    attachments: list[str] | None = None,
 ) -> str:
     spec = TOOL_CLIS.get(tool)
     if spec is None:
         return "Não encontrei esse agente."
-    prompt = action_prompt(action_id, connection)
+    prompt = action_prompt(
+        action_id,
+        connection,
+        custom_text=custom_prompt,
+        attachments=attachments,
+    )
     tmp_dir().mkdir(parents=True, exist_ok=True)
     prompt_file = tmp_dir() / f"prompt-{tool}-{action_id}.txt"
     prompt_file.write_text(prompt, encoding="utf-8")

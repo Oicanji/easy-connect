@@ -40,10 +40,31 @@ ACTIONS = (
             "path, how it is started, and whether it looks healthy."
         ),
     ),
+    (
+        "docker_logs",
+        "Pode buscar e baixar no meu downloads o log completo de hoje do docker/ou similar",
+        (
+            "Find today's complete logs for Docker containers, docker compose services, or similar "
+            "container/runtime logs on the VM. Prefer full logs for the current day. Download or copy "
+            "those log files into the local Downloads folder on this machine (the developer's PC). "
+            "If Docker is absent, look for equivalent logs (podman, journalctl for container units, "
+            "app log directories). Report what you saved and where."
+        ),
+    ),
+    (
+        "custom",
+        "Escreva aqui...",
+        "",
+    ),
 )
 
 
-def action_prompt(action_id: str, connection: Connection) -> str:
+def action_prompt(
+    action_id: str,
+    connection: Connection,
+    custom_text: str = "",
+    attachments: list[str] | None = None,
+) -> str:
     command = connection.command
     target = f"{connection.name} ({connection.username}@{connection.host}:{connection.port})"
     prefix = (
@@ -55,7 +76,24 @@ def action_prompt(action_id: str, connection: Connection) -> str:
         if wrapper and wrapper != command:
             prefix += f"; if that command is not found, run `{wrapper}`"
     prefix += ". Do not use raw ssh and do not ask for passwords. "
-    for item_id, _label, template in ACTIONS:
-        if item_id == action_id:
-            return prefix + template.format(command=command)
-    return prefix + f"Inspect the VM with `{command}`."
+    body = ""
+    if action_id == "custom":
+        body = (custom_text or "").strip()
+        if not body:
+            body = "Inspect the VM and wait for further instructions only if something blocks you."
+    else:
+        for item_id, _label, template in ACTIONS:
+            if item_id == action_id:
+                body = template.format(command=command)
+                break
+        if not body:
+            body = f"Inspect the VM with `{command}`."
+    prompt = prefix + body
+    files = [path.strip() for path in (attachments or []) if path.strip()]
+    if files:
+        listed = "\n".join(f"- `{path}`" for path in files)
+        prompt += (
+            " Local files attached by the developer (read them from this machine when useful):\n"
+            f"{listed}"
+        )
+    return prompt

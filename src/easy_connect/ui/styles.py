@@ -188,15 +188,74 @@ QLabel#Credit {
     font-size: 11px;
     background: transparent;
 }
+QLabel#PromptMeta {
+    color: #6b7380;
+    font-size: 10px;
+    background: transparent;
+}
+QLabel#PromptAgentName {
+    color: #9aa3ae;
+    font-size: 12px;
+    background: transparent;
+}
+QLabel#PromptAgentIcon {
+    background: transparent;
+}
+QFrame#PromptComposer {
+    background-color: #1e232b;
+    border: 1px solid #2c3440;
+    border-radius: 14px;
+}
+QPlainTextEdit#PromptEdit {
+    background-color: transparent;
+    border: none;
+    padding: 6px 4px;
+    font-size: 13px;
+}
+QPlainTextEdit#PromptEdit:focus {
+    border: none;
+}
+QPushButton#PromptAttach {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+}
+QPushButton#PromptAttach:hover {
+    background-color: #242b34;
+}
+QFrame#PromptChip {
+    background-color: #242b34;
+    border: 1px solid #323b47;
+    border-radius: 8px;
+}
+QLabel#PromptChipText {
+    color: #c5ced6;
+    font-size: 11px;
+    background: transparent;
+}
+QPushButton#PromptChipRemove {
+    background: transparent;
+    border: none;
+    color: #8b949e;
+    padding: 0;
+    font-size: 11px;
+}
+QPushButton#PromptChipRemove:hover {
+    color: #e07a7f;
+    background: transparent;
+}
 QMenu {
     background-color: #1e232b;
     color: #e6e8ec;
     border: 1px solid #323b47;
     padding: 6px;
+    border-radius: 8px;
 }
 QMenu::item {
-    padding: 8px 14px;
-    background: transparent;
+    padding: 8px 18px;
+    border-radius: 6px;
+    min-width: 280px;
 }
 QMenu::item:selected {
     background-color: #2f9e8f;
@@ -206,6 +265,11 @@ QMenu::separator {
     height: 1px;
     background: #323b47;
     margin: 4px 8px;
+}
+QMenu::right-arrow {
+    width: 10px;
+    height: 10px;
+    margin-right: 8px;
 }
 QTabWidget::pane {
     border: none;
@@ -392,6 +456,79 @@ QLabel#Credit {
     color: #8a94a0;
     font-size: 11px;
     background: transparent;
+}
+QLabel#PromptMeta {
+    color: #8a94a0;
+    font-size: 10px;
+    background: transparent;
+}
+QLabel#PromptAgentName {
+    color: #5b6773;
+    font-size: 12px;
+    background: transparent;
+}
+QLabel#PromptAgentIcon {
+    background: transparent;
+}
+QFrame#PromptComposer {
+    background-color: #ffffff;
+    border: 1px solid #d5dde5;
+    border-radius: 14px;
+}
+QPlainTextEdit#PromptEdit {
+    background-color: transparent;
+    border: none;
+    padding: 6px 4px;
+    font-size: 13px;
+}
+QPlainTextEdit#PromptEdit:focus {
+    border: none;
+}
+QPushButton#PromptAttach {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+}
+QPushButton#PromptAttach:hover {
+    background-color: #eef2f5;
+}
+QFrame#PromptChip {
+    background-color: #eef2f5;
+    border: 1px solid #d5dde5;
+    border-radius: 8px;
+}
+QLabel#PromptChipText {
+    color: #5b6773;
+    font-size: 11px;
+    background: transparent;
+}
+QPushButton#PromptChipRemove {
+    background: transparent;
+    border: none;
+    color: #8a94a0;
+    padding: 0;
+    font-size: 11px;
+}
+QPushButton#PromptChipRemove:hover {
+    color: #c2474d;
+    background: transparent;
+}
+QMenu {
+    background-color: #ffffff;
+    color: #1c232c;
+    border: 1px solid #d5dde5;
+    padding: 6px;
+    border-radius: 8px;
+}
+QMenu::item {
+    padding: 8px 18px;
+    border-radius: 6px;
+    min-width: 280px;
+}
+QMenu::item:selected {
+    background-color: #2f9e8f;
+    color: #08110f;
 }
 QTabBar::tab {
     background: transparent;

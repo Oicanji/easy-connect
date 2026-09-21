@@ -11,11 +11,11 @@ ROOT = SPECDIR.parent
 SRC = ROOT / "src"
 ICON = SPECDIR / "easyconnect.ico"
 VERSION_INFO = SPECDIR / "file_version_info.txt"
-ICON_PNG = ROOT / "src" / "easy_connect" / "resources" / "icon.png"
+RESOURCES = ROOT / "src" / "easy_connect" / "resources"
 
 datas = []
-if ICON_PNG.is_file():
-    datas.append((str(ICON_PNG), "easy_connect/resources"))
+if RESOURCES.is_dir():
+    datas.append((str(RESOURCES), "easy_connect/resources"))
 
 hiddenimports = [
     "keyring.backends.Windows",

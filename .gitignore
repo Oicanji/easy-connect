@@ -14,4 +14,5 @@ tools/
 Thumbs.db
 session.key
 vault.json
+.cursor/
 

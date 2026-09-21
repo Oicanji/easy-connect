@@ -6,7 +6,7 @@ from typing import Literal
 from pathlib import Path
 
 from easy_connect.core.commands import invoke_command
-from easy_connect.core.models import Connection, LlmExport, as_auth_method, as_llm_kind
+from easy_connect.core.models import Connection, LlmExport, as_llm_kind
 from easy_connect.core.paths import is_windows
 
 LlmKind = Literal["claude", "cursor", "antigravity"]
@@ -100,8 +100,6 @@ def _body(connection: Connection) -> str:
             "Do not run extra sudo unless a specific task requires it. "
             "You should land in an elevated shell."
         )
-    auth = as_auth_method(connection.auth_method).value.replace("_", " ")
-    pubkey = connection.public_key_path.strip() or "Bundled with the private key on the developer machine"
     invoke = invoke_command(command)
     if is_windows():
         shell = "powershell"
@@ -128,8 +126,6 @@ Open this VM only with `{command}`. Never call `easy-connect-cli`, `Invoke-EasyC
 - Connection: `{connection.name}`
 - Target: `{target}`
 - Jump host: `{jump}`
-- Auth: `{auth}`
-- Public key (reference): `{pubkey}`
 - Remote directory: `{remote_dir}`
 - Command: `{command}`
 - Wrapper: `{invoke}`
