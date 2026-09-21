@@ -1,6 +1,6 @@
 # Easy Connect
 
-Aplicativo desktop para salvar sessões SSH de VMs com senha mestre e expor comandos globais no terminal.
+Automatize o acesso seguro às suas VMs: um comando no terminal já autentica, sem expor credenciais. As sessões ficam criptografadas no cofre local, protegidas por senha mestre. No fim, há regras e integrações com LLM.
 
 - Página de download: [oicanji.github.io/easy-connect](https://oicanji.github.io/easy-connect/)
 - Licença: [CC0 1.0](LICENSE)
