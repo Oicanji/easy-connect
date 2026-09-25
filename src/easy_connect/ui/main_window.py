@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -28,6 +28,7 @@ from easy_connect.ui.connection_dialog import ConnectionDialog
 from easy_connect.ui.connection_list import ConnectionList
 from easy_connect.ui.export_dialog import ExportDialog
 from easy_connect.ui.settings_tab import SettingsTab
+from easy_connect.i18n import t
 from easy_connect.ui.styles import apply_app_icon
 
 
@@ -57,7 +58,7 @@ class MainWindow(QMainWindow):
         title.setObjectName("Title")
         version = QLabel(f"v{__version__}")
         version.setObjectName("Subtitle")
-        subtitle = QLabel("Acesso automatizado e seguro às VMs, com regras e integrações LLM")
+        subtitle = QLabel(t("app.subtitle"))
         subtitle.setObjectName("Subtitle")
         titles = QVBoxLayout()
         titles.setSpacing(2)
@@ -65,7 +66,7 @@ class MainWindow(QMainWindow):
         titles.addWidget(version)
         titles.addWidget(subtitle)
         header_layout.addLayout(titles, 1)
-        lock = QPushButton("Bloquear")
+        lock = QPushButton(t("app.lock"))
         lock.clicked.connect(self._lock)
         header_layout.addWidget(lock, 0, Qt.AlignmentFlag.AlignTop)
         layout.addWidget(header)
@@ -77,9 +78,11 @@ class MainWindow(QMainWindow):
         self.list_tab.duplicate_requested.connect(self._duplicate)
         self.list_tab.export_requested.connect(self._export)
         self.list_tab.delete_requested.connect(self._delete)
+        self.list_tab.enabled_changed.connect(self._set_enabled)
         self.settings_tab = SettingsTab(self.session)
-        self.tabs.addTab(self.list_tab, "Conexões")
-        self.tabs.addTab(self.settings_tab, "Configurações")
+        self.settings_tab.language_changed.connect(self._rebuild_later)
+        self.tabs.addTab(self.list_tab, t("app.tab.connections"))
+        self.tabs.addTab(self.settings_tab, t("app.tab.settings"))
         layout.addWidget(self.tabs, 1)
         credit = QLabel("Ignacio Sepúlveda")
         credit.setObjectName("Credit")
@@ -87,6 +90,15 @@ class MainWindow(QMainWindow):
         credit.setContentsMargins(24, 4, 24, 14)
         layout.addWidget(credit)
         self.setCentralWidget(container)
+
+    def _rebuild_later(self) -> None:
+        QTimer.singleShot(0, self._rebuild)
+
+    def _rebuild(self) -> None:
+        index = self.tabs.currentIndex() if hasattr(self, "tabs") else 0
+        self._build()
+        if index >= 0:
+            self.tabs.setCurrentIndex(min(index, self.tabs.count() - 1))
 
     def _add(self) -> None:
         dialog = ConnectionDialog(self.session)
@@ -108,7 +120,7 @@ class MainWindow(QMainWindow):
             return
         copy = connection.model_copy(deep=True)
         copy.id = uuid4().hex
-        copy.name = f"{connection.name} (cópia)"
+        copy.name = t("main.copy_name", name=connection.name)
         copy.llm_exports = []
         def taken(command: str) -> bool:
             return self.session.command_taken(command)
@@ -128,7 +140,7 @@ class MainWindow(QMainWindow):
         count = len(connection.llm_exports)
         if count:
             self.statusBar().showMessage(
-                f"{count} arquivo(s) de instrução vinculados.",
+                t("main.files_linked", count=count),
                 5000,
             )
 
@@ -138,8 +150,8 @@ class MainWindow(QMainWindow):
             return
         answer = QMessageBox.question(
             self,
-            "Excluir conexão",
-            f"Excluir '{connection.name}' e o comando {connection.command}?",
+            t("main.delete.title"),
+            t("main.delete.confirm", name=connection.name, command=connection.command),
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
@@ -147,7 +159,18 @@ class MainWindow(QMainWindow):
         remove_wrapper(connection.command)
         self.session.save()
         self.list_tab.reload()
-        self.statusBar().showMessage("Conexão excluída.", 4000)
+        self.statusBar().showMessage(t("main.deleted"), 4000)
+
+    def _set_enabled(self, connection_id: str, enabled: bool) -> None:
+        connection = self.session.find_by_id(connection_id)
+        if connection is None:
+            return
+        connection.enabled = enabled
+        connection.hide_disabled_prompt = False
+        self.session.upsert(connection)
+        self.session.save()
+        state = t("main.enabled") if enabled else t("main.disabled")
+        self.statusBar().showMessage(state, 4000)
 
     def _persist(self, connection: Connection, previous_command: str | None) -> None:
         if previous_command and previous_command != connection.command:
@@ -158,9 +181,9 @@ class MainWindow(QMainWindow):
         self.session.save()
         rewritten = self._rewrite_instruction(connection)
         self.list_tab.reload()
-        message = f"Comando {connection.command} pronto."
+        message = t("main.command_ready", command=connection.command)
         if rewritten:
-            message = f"Comando {connection.command} pronto. Instruções da LLM atualizadas."
+            message = t("main.command_ready_llm", command=connection.command)
         self.statusBar().showMessage(message, 5000)
 
     def _rewrite_instruction(self, connection: Connection) -> bool:
@@ -170,7 +193,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(
                 self,
                 "Easy Connect",
-                f"A conexão foi salva, mas a instrução da LLM não pôde ser atualizada:\n{exc}",
+                t("main.llm_update_failed", error=exc),
             )
             return False
 

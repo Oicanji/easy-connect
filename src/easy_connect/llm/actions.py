@@ -3,6 +3,7 @@ from __future__ import annotations
 from easy_connect.core.commands import invoke_command
 from easy_connect.core.models import Connection
 from easy_connect.core.paths import is_windows
+from easy_connect.i18n import t
 
 
 TOOLS = (
@@ -57,6 +58,10 @@ ACTIONS = (
         "",
     ),
 )
+
+
+def action_menu_label(action_id: str) -> str:
+    return t(f"agents.action.{action_id}")
 
 
 def action_prompt(

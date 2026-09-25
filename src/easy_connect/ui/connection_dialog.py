@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPlainTextEdit,
     QPushButton,
     QSpinBox,
     QStackedWidget,
@@ -23,11 +24,10 @@ from easy_connect.core.commands import is_valid_command, sanitize_command, sugge
 from easy_connect.core.models import AuthMethod, Connection, as_auth_method
 from easy_connect.core.session import AppSession
 from easy_connect.core.validators import validate_connection
+from easy_connect.i18n import t
+from easy_connect.ui.icon_picker import IconPicker
+from easy_connect.ui.rules_panel import RulesPanel
 from easy_connect.ui.widgets import FilePicker
-
-
-PRIVATE_KEY_FILTER = "Todos os arquivos (*);;PEM/KEY (*.pem *.key);;PPK (*.ppk)"
-PUBLIC_KEY_FILTER = "Chave pública (*.pub);;Todos os arquivos (*)"
 
 
 class FormError(ValueError):
@@ -73,9 +73,9 @@ class ConnectionDialog(QDialog):
         self.result_connection: Connection | None = None
         self._command_manual = connection is not None
         self._worker: ReachabilityWorker | None = None
-        self.setWindowTitle("Editar conexão" if connection else "Nova conexão")
+        self.setWindowTitle(t("dialog.edit") if connection else t("dialog.new"))
         self.setModal(True)
-        self.setFixedSize(580, 540)
+        self.setFixedSize(1120, 760)
         self._build()
         if connection:
             self._fill(connection)
@@ -90,9 +90,11 @@ class ConnectionDialog(QDialog):
 
         self.tabs = QTabWidget()
         self.tabs.setObjectName("DialogTabs")
-        self.tabs.addTab(self._tab_session(), "Sessão")
-        self.tabs.addTab(self._tab_auth(), "Autenticação")
-        self.tabs.addTab(self._tab_sudo(), "Sudo")
+        self.tabs.addTab(self._tab_session(), t("dialog.tab.session"))
+        self.tabs.addTab(self._tab_auth(), t("dialog.tab.auth"))
+        self.tabs.addTab(self._tab_sudo(), t("dialog.tab.sudo"))
+        self.tabs.addTab(self._tab_rules(), t("dialog.tab.rules"))
+        self.tabs.addTab(self._tab_icon(), t("dialog.tab.icon"))
         root.addWidget(self.tabs, 1)
 
         self.status = QLabel("")
@@ -101,13 +103,13 @@ class ConnectionDialog(QDialog):
         root.addWidget(self.status)
 
         buttons = QHBoxLayout()
-        test = QPushButton("Testar rede")
+        test = QPushButton(t("dialog.test"))
         test.clicked.connect(self._test_network)
         buttons.addWidget(test)
         buttons.addStretch()
-        cancel = QPushButton("Cancelar")
+        cancel = QPushButton(t("dialog.cancel"))
         cancel.clicked.connect(self.reject)
-        save = QPushButton("Salvar conexão")
+        save = QPushButton(t("dialog.save"))
         save.setObjectName("Primary")
         save.clicked.connect(self._save)
         buttons.addWidget(cancel)
@@ -121,7 +123,7 @@ class ConnectionDialog(QDialog):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(16, 16, 16, 8)
         layout.setSpacing(10)
-        hint = QLabel("Dados da sessão SSH, no mesmo espírito do WinSCP.")
+        hint = QLabel(t("dialog.session_hint"))
         hint.setObjectName("Hint")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -130,7 +132,10 @@ class ConnectionDialog(QDialog):
         form.setHorizontalSpacing(12)
         form.setVerticalSpacing(10)
         self.name = QLineEdit()
-        self.name.setPlaceholderText("Nome amigável")
+        self.name.setPlaceholderText(t("dialog.name_ph"))
+        self.description = QPlainTextEdit()
+        self.description.setPlaceholderText(t("dialog.description_ph"))
+        self.description.setFixedHeight(88)
         self.host = QLineEdit()
         self.host.setPlaceholderText("1.100.0.2")
         self.host.textChanged.connect(self._on_host_changed)
@@ -143,12 +148,12 @@ class ConnectionDialog(QDialog):
         host_layout.setContentsMargins(0, 0, 0, 0)
         host_layout.setSpacing(8)
         host_layout.addWidget(self.host, 1)
-        host_layout.addWidget(QLabel("Porta"))
+        host_layout.addWidget(QLabel(t("dialog.port")))
         host_layout.addWidget(self.port)
         self.username = QLineEdit()
         self.username.setPlaceholderText("ubuntu")
         self.jump = QLineEdit()
-        self.jump.setPlaceholderText("usuario@jump-host (opcional)")
+        self.jump.setPlaceholderText(t("dialog.jump_ph"))
         self.remote_directory = QLineEdit()
         self.remote_directory.setPlaceholderText("/home/ubuntu/app")
         self.command = QLineEdit()
@@ -160,15 +165,18 @@ class ConnectionDialog(QDialog):
         self.keepalive = QSpinBox()
         self.keepalive.setRange(0, 300)
         self.keepalive.setValue(30)
-        self.compression = QCheckBox("Compressão SSH")
-        form.addRow("Nome", self.name)
-        form.addRow("Host / IP", host_row)
-        form.addRow("Usuário", self.username)
-        form.addRow("Jump host", self.jump)
-        form.addRow("Diretório remoto", self.remote_directory)
-        form.addRow("Comando", self.command)
-        form.addRow("Timeout (s)", self.timeout)
-        form.addRow("Keepalive (s)", self.keepalive)
+        self.compression = QCheckBox(t("dialog.compression"))
+        description_label = QLabel(t("dialog.description"))
+        description_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        form.addRow(t("dialog.name"), self.name)
+        form.addRow(description_label, self.description)
+        form.addRow(t("dialog.host"), host_row)
+        form.addRow(t("dialog.user"), self.username)
+        form.addRow(t("dialog.jump"), self.jump)
+        form.addRow(t("dialog.remote_dir"), self.remote_directory)
+        form.addRow(t("dialog.command"), self.command)
+        form.addRow(t("dialog.timeout"), self.timeout)
+        form.addRow(t("dialog.keepalive"), self.keepalive)
         form.addRow("", self.compression)
         layout.addLayout(form)
         layout.addStretch()
@@ -179,18 +187,18 @@ class ConnectionDialog(QDialog):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(16, 16, 16, 8)
         layout.setSpacing(10)
-        hint = QLabel("Selecione arquivos de chave como no WinSCP. Nada disso é pedido no terminal.")
+        hint = QLabel(t("dialog.auth_hint"))
         hint.setObjectName("Hint")
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
         method_row = QHBoxLayout()
         self.auth = QComboBox()
-        self.auth.addItem("Senha", AuthMethod.password.value)
-        self.auth.addItem("Chave privada", AuthMethod.private_key.value)
+        self.auth.addItem(t("dialog.auth.password"), AuthMethod.password.value)
+        self.auth.addItem(t("dialog.auth.key"), AuthMethod.private_key.value)
         self.auth.addItem("ssh-agent", AuthMethod.agent.value)
         self.auth.currentIndexChanged.connect(self._sync_auth)
-        method_row.addWidget(QLabel("Método"))
+        method_row.addWidget(QLabel(t("dialog.method")))
         method_row.addWidget(self.auth, 1)
         layout.addLayout(method_row)
 
@@ -199,7 +207,7 @@ class ConnectionDialog(QDialog):
         self.auth_stack.addWidget(self._auth_key_page())
         self.auth_stack.addWidget(self._auth_agent_page())
         layout.addWidget(self.auth_stack, 1)
-        self.agent_forwarding = QCheckBox("Encaminhar agente SSH (ForwardAgent)")
+        self.agent_forwarding = QCheckBox(t("dialog.forward_agent"))
         layout.addWidget(self.agent_forwarding)
         return page
 
@@ -210,10 +218,10 @@ class ConnectionDialog(QDialog):
         layout.setSpacing(8)
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.EchoMode.Password)
-        self.password.setPlaceholderText("Senha SSH")
-        layout.addWidget(QLabel("Senha"))
+        self.password.setPlaceholderText(t("dialog.ssh_password"))
+        layout.addWidget(QLabel(t("dialog.password_label")))
         layout.addWidget(self.password)
-        note = QLabel("Fica no cofre e o comando global entra já autenticado.")
+        note = QLabel(t("dialog.password_note"))
         note.setObjectName("Hint")
         note.setWordWrap(True)
         layout.addWidget(note)
@@ -226,27 +234,27 @@ class ConnectionDialog(QDialog):
         layout.setContentsMargins(0, 8, 0, 0)
         layout.setSpacing(8)
         self.private_key = FilePicker(
-            "Arquivo da chave privada",
-            "Selecionar chave privada",
-            PRIVATE_KEY_FILTER,
+            t("dialog.pick_private"),
+            t("dialog.pick_private_title"),
+            t("dialog.filter.private"),
         )
         self.private_key.path_changed.connect(lambda _path: self._suggest_public_key())
         self.public_key = FilePicker(
-            "Arquivo da chave pública",
-            "Selecionar chave pública",
-            PUBLIC_KEY_FILTER,
+            t("dialog.pick_public"),
+            t("dialog.pick_public_title"),
+            t("dialog.filter.public"),
         )
         self.key_passphrase = QLineEdit()
         self.key_passphrase.setEchoMode(QLineEdit.EchoMode.Password)
-        self.key_passphrase.setPlaceholderText("Passphrase da chave, se houver")
+        self.key_passphrase.setPlaceholderText(t("dialog.passphrase_ph"))
         self.stored_key_hint = QLabel("")
         self.stored_key_hint.setObjectName("Hint")
         self.stored_key_hint.setWordWrap(True)
-        layout.addWidget(QLabel("Chave privada"))
+        layout.addWidget(QLabel(t("dialog.private")))
         layout.addWidget(self.private_key)
-        layout.addWidget(QLabel("Chave pública"))
+        layout.addWidget(QLabel(t("dialog.public")))
         layout.addWidget(self.public_key)
-        layout.addWidget(QLabel("Passphrase"))
+        layout.addWidget(QLabel(t("dialog.passphrase")))
         layout.addWidget(self.key_passphrase)
         layout.addWidget(self.stored_key_hint)
         layout.addStretch()
@@ -256,10 +264,7 @@ class ConnectionDialog(QDialog):
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 8, 0, 0)
-        note = QLabel(
-            "Usa o ssh-agent do sistema (OpenSSH Agent ou Pageant). "
-            "Nenhuma senha ou arquivo de chave precisa ser guardado aqui."
-        )
+        note = QLabel(t("dialog.agent_note"))
         note.setObjectName("Hint")
         note.setWordWrap(True)
         layout.addWidget(note)
@@ -271,15 +276,12 @@ class ConnectionDialog(QDialog):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(16, 16, 16, 8)
         layout.setSpacing(10)
-        hint = QLabel(
-            "Se ligado, o comando já cai com privilégio elevado. "
-            "Útil quando o usuário SSH não é root."
-        )
+        hint = QLabel(t("dialog.sudo_hint"))
         hint.setObjectName("Hint")
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
-        self.sudo_enabled = QCheckBox("Elevar com sudo após o login")
+        self.sudo_enabled = QCheckBox(t("dialog.sudo_enable"))
         self.sudo_enabled.toggled.connect(self._sync_sudo)
         layout.addWidget(self.sudo_enabled)
 
@@ -291,18 +293,15 @@ class ConnectionDialog(QDialog):
         self.sudo_user.setText("root")
         self.sudo_password = QLineEdit()
         self.sudo_password.setEchoMode(QLineEdit.EchoMode.Password)
-        self.sudo_password.setPlaceholderText("Senha do sudo, se o servidor pedir")
+        self.sudo_password.setPlaceholderText(t("dialog.sudo_password_ph"))
         self.sudo_command = QLineEdit()
         self.sudo_command.setText("sudo -i")
         self.sudo_command.setPlaceholderText("sudo -i")
-        form.addRow("Usuário sudo", self.sudo_user)
-        form.addRow("Senha sudo", self.sudo_password)
-        form.addRow("Comando", self.sudo_command)
+        form.addRow(t("dialog.sudo_user"), self.sudo_user)
+        form.addRow(t("dialog.sudo_password"), self.sudo_password)
+        form.addRow(t("dialog.command"), self.sudo_command)
         layout.addLayout(form)
-        extra = QLabel(
-            "Deixe a senha em branco se o usuário tiver NOPASSWD. "
-            "O comando padrão abre um login shell elevado."
-        )
+        extra = QLabel(t("dialog.sudo_extra"))
         extra.setObjectName("Hint")
         extra.setWordWrap(True)
         layout.addWidget(extra)
@@ -310,8 +309,40 @@ class ConnectionDialog(QDialog):
         self._sudo_fields = [self.sudo_user, self.sudo_password, self.sudo_command]
         return page
 
+    def _tab_rules(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(16, 16, 16, 8)
+        layout.setSpacing(10)
+        hint = QLabel(t("dialog.rules_hint"))
+        hint.setObjectName("Hint")
+        hint.setWordWrap(True)
+        self.rules_panel = RulesPanel()
+        columns = QLabel(t("dialog.rules_columns"))
+        columns.setObjectName("Hint")
+        columns.setWordWrap(True)
+        layout.addWidget(hint)
+        layout.addWidget(self.rules_panel)
+        layout.addWidget(columns)
+        layout.addStretch()
+        return page
+
+    def _tab_icon(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(16, 16, 16, 8)
+        layout.setSpacing(10)
+        hint = QLabel(t("dialog.icon_hint"))
+        hint.setObjectName("Hint")
+        hint.setWordWrap(True)
+        self.icon_picker = IconPicker()
+        layout.addWidget(hint)
+        layout.addWidget(self.icon_picker, 1)
+        return page
+
     def _fill(self, connection: Connection) -> None:
         self.name.setText(connection.name)
+        self.description.setPlainText(connection.description)
         self.host.setText(connection.host)
         self.port.setValue(connection.port)
         self.username.setText(connection.username)
@@ -321,13 +352,13 @@ class ConnectionDialog(QDialog):
         if index >= 0:
             self.auth.setCurrentIndex(index)
         if connection.password:
-            self.password.setPlaceholderText("Senha já salva. Deixe em branco para manter.")
+            self.password.setPlaceholderText(t("dialog.password_kept"))
         self.private_key.set_path(connection.private_key_path)
         self.public_key.set_path(connection.public_key_path)
         if connection.private_key_passphrase:
-            self.key_passphrase.setPlaceholderText("Passphrase já salva. Deixe em branco para manter.")
+            self.key_passphrase.setPlaceholderText(t("dialog.passphrase_kept"))
         if connection.private_key_content and not connection.private_key_path:
-            self.stored_key_hint.setText("Há uma chave privada no cofre. Selecione um arquivo para substituir.")
+            self.stored_key_hint.setText(t("dialog.key_stored"))
         self.agent_forwarding.setChecked(connection.agent_forwarding)
         self.command.setText(connection.command)
         self.timeout.setValue(connection.validation_timeout)
@@ -336,8 +367,10 @@ class ConnectionDialog(QDialog):
         self.sudo_enabled.setChecked(connection.sudo_enabled)
         self.sudo_user.setText(connection.sudo_user or "root")
         if connection.sudo_password:
-            self.sudo_password.setPlaceholderText("Senha sudo já salva. Deixe em branco para manter.")
+            self.sudo_password.setPlaceholderText(t("dialog.sudo_password_kept"))
         self.sudo_command.setText(connection.sudo_command or "sudo -i")
+        self.rules_panel.set_rules(connection.rules)
+        self.icon_picker.set_icon(connection.icon)
         self._sync_auth()
         self._sync_sudo()
 
@@ -388,9 +421,9 @@ class ConnectionDialog(QDialog):
         host = self.host.text().strip()
         if not host:
             self.tabs.setCurrentIndex(0)
-            self._set_status("Informe o host para testar.", "Error")
+            self._set_status(t("dialog.host_required"), "Error")
             return
-        self._set_status("Checando rede...")
+        self._set_status(t("dialog.checking"))
         settings = self.session.payload.settings
         self._worker = ReachabilityWorker(
             host,
@@ -403,7 +436,7 @@ class ConnectionDialog(QDialog):
         self._worker.start()
 
     def _on_test_done(self, ok: bool, message: str) -> None:
-        self._set_status("Host alcançável." if ok else message, "Success" if ok else "Error")
+        self._set_status(t("dialog.reachable") if ok else message, "Success" if ok else "Error")
 
     def _save(self) -> None:
         try:
@@ -421,19 +454,16 @@ class ConnectionDialog(QDialog):
         username = self.username.text().strip()
         command = sanitize_command(self.command.text())
         if not name:
-            raise FormError("Informe um nome para a conexão.", 0)
+            raise FormError(t("dialog.name_required"), 0)
         if not host:
-            raise FormError("Informe o host ou IP.", 0)
+            raise FormError(t("dialog.host_missing"), 0)
         if not username:
-            raise FormError("Informe o usuário SSH.", 0)
+            raise FormError(t("dialog.user_required"), 0)
         if not is_valid_command(command):
-            raise FormError("Comando inválido. Use letras, números, hífen ou underline.", 0)
+            raise FormError(t("dialog.command_invalid"), 0)
         ignore_id = self.original.id if self.original else None
         if self.session.command_taken(command, ignore_id=ignore_id):
-            raise FormError(
-                f"O comando {command} já está em uso. Escolha outro, por exemplo {command}-deploy.",
-                0,
-            )
+            raise FormError(t("dialog.command_taken", command=command), 0)
         method = as_auth_method(self.auth.currentData() or AuthMethod.password)
         password = self.password.text()
         passphrase = self.key_passphrase.text()
@@ -446,16 +476,16 @@ class ConnectionDialog(QDialog):
             if self.sudo_enabled.isChecked() and not sudo_password:
                 sudo_password = self.original.sudo_password
         if method == AuthMethod.password and not password:
-            raise FormError("Informe a senha SSH. Ela não será pedida no terminal.", 1)
+            raise FormError(t("dialog.ssh_password_required"), 1)
         private_path = self.private_key.path()
         public_path = self.public_key.path()
         stored_key = self.original.private_key_content if self.original else ""
         if method == AuthMethod.private_key and not private_path and not stored_key:
-            raise FormError("Selecione o arquivo da chave privada.", 1)
+            raise FormError(t("dialog.private_required"), 1)
         if public_path and not Path(public_path).expanduser().is_file():
-            raise FormError("Arquivo da chave pública não encontrado.", 1)
+            raise FormError(t("dialog.public_missing"), 1)
         if private_path and not Path(private_path).expanduser().is_file():
-            raise FormError("Arquivo da chave privada não encontrado.", 1)
+            raise FormError(t("dialog.private_missing"), 1)
         base = self.original.model_copy() if self.original else Connection(
             name=name,
             host=host,
@@ -463,6 +493,7 @@ class ConnectionDialog(QDialog):
             command=command,
         )
         base.name = name
+        base.description = self.description.toPlainText().strip()
         base.host = host
         base.port = int(self.port.value())
         base.username = username
@@ -487,4 +518,6 @@ class ConnectionDialog(QDialog):
         base.sudo_user = self.sudo_user.text().strip() or "root"
         base.sudo_password = sudo_password if base.sudo_enabled else ""
         base.sudo_command = self.sudo_command.text().strip() or "sudo -i"
+        base.rules = self.rules_panel.rules()
+        base.icon = self.icon_picker.icon()
         return base

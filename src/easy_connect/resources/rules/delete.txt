@@ -1,0 +1,11 @@
+delete
+remove
+purge
+erase
+wipe
+destroy
+terminate
+stop
+halt
+suspend
+pause

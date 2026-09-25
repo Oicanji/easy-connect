@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from easy_connect.core.models import Connection, LlmTarget, as_llm_kind
+from easy_connect.i18n import t
 from easy_connect.llm.templates import LlmKind, forget_export, remember_export, suggested_filename
 
 
@@ -24,20 +25,17 @@ class ExportDialog(QDialog):
     def __init__(self, connection: Connection, parent=None) -> None:
         super().__init__(parent)
         self.connection = connection
-        self.setWindowTitle("Exportar instrução")
+        self.setWindowTitle(t("export.window"))
         self.setModal(True)
         self.setMinimumSize(480, 380)
         self.resize(520, 440)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 18, 20, 18)
         layout.setSpacing(10)
-        title = QLabel("Exportar instrução da LLM")
+        title = QLabel(t("export.title"))
         title.setObjectName("Title")
         title.setStyleSheet("font-size: 18px;")
-        hint = QLabel(
-            "O texto é gerado com os dados desta conexão. "
-            "Todos os arquivos da lista são atualizados sozinhos quando você editar a conexão."
-        )
+        hint = QLabel(t("export.hint"))
         hint.setObjectName("Hint")
         hint.setWordWrap(True)
         layout.addWidget(title)
@@ -55,14 +53,14 @@ class ExportDialog(QDialog):
             index = self.target.findData(kind)
             if index >= 0:
                 self.target.setCurrentIndex(index)
-        add = QPushButton("Adicionar arquivo")
+        add = QPushButton(t("export.add"))
         add.setObjectName("Primary")
         add.clicked.connect(self._add)
         target_row.addWidget(self.target, 1)
         target_row.addWidget(add, 0, Qt.AlignmentFlag.AlignVCenter)
         layout.addLayout(target_row)
 
-        files_label = QLabel("ARQUIVOS")
+        files_label = QLabel(t("export.files"))
         files_label.setObjectName("Section")
         layout.addWidget(files_label)
 
@@ -83,7 +81,7 @@ class ExportDialog(QDialog):
 
         buttons = QHBoxLayout()
         buttons.addStretch()
-        close = QPushButton("Fechar")
+        close = QPushButton(t("export.close"))
         close.clicked.connect(self.accept)
         buttons.addWidget(close)
         layout.addLayout(buttons)
@@ -97,7 +95,7 @@ class ExportDialog(QDialog):
                 widget.deleteLater()
         exports = list(self.connection.llm_exports)
         if not exports:
-            empty = QLabel("Nenhum arquivo ainda. Adicione um para cada projeto.")
+            empty = QLabel(t("export.empty"))
             empty.setObjectName("Hint")
             empty.setWordWrap(True)
             self.files_layout.addWidget(empty)
@@ -126,7 +124,7 @@ class ExportDialog(QDialog):
 
     def _remove(self, path: str) -> None:
         forget_export(self.connection, path)
-        self.status.setText("Arquivo removido da lista. O arquivo no disco não foi apagado.")
+        self.status.setText(t("export.removed"))
         self._reload_files()
 
     def _add(self) -> None:
@@ -142,17 +140,17 @@ class ExportDialog(QDialog):
                 start = str(Path.home() / Path(suggested).name)
             path, _ = QFileDialog.getSaveFileName(
                 self,
-                "Salvar instrução da LLM",
+                t("export.save_title"),
                 start,
-                "Markdown (*.md *.mdc);;Todos os arquivos (*.*)",
+                t("export.filter"),
             )
             if not path:
                 return
             output = remember_export(self.connection, kind, path)
             self.status.setObjectName("Success")
-            self.status.setText(f"Instrução salva em {output}")
+            self.status.setText(t("export.saved", path=output))
             self.status.style().unpolish(self.status)
             self.status.style().polish(self.status)
             self._reload_files()
         except Exception as exc:
-            QMessageBox.critical(self, "Easy Connect", f"Não foi possível salvar a instrução:\n{exc}")
+            QMessageBox.critical(self, "Easy Connect", t("export.failed", error=exc))

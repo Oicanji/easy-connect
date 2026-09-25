@@ -2,6 +2,15 @@
 
 Todas as versões publicadas do Easy Connect.
 
+## 1.1.0 - 2026-09-25
+
+- Cada conexão pode ser ligada ou desligada. Um comando desligado abre o Easy Connect e pede para habilitar.
+- Duplicar ficou junto de editar e excluir.
+- Regras por conexão: permitir sempre, pedir permissão ou nunca executar, para leitura, escrita, exclusão, banco de dados e credenciais. O card mostra a permissão mais restrita.
+- Cada conexão pode ter um ícone escolhido numa lista com busca.
+- Descrição opcional da conexão, incluída na exportação de regras para LLM.
+- Interface em português, inglês, espanhol, alemão e chinês.
+
 ## 1.0.2 - 2026-09-21
 
 - Corrigido o encoding do instalador Windows (acentos e Ç).

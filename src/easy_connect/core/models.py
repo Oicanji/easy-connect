@@ -19,6 +19,33 @@ class LlmTarget(str, Enum):
     antigravity = "antigravity"
 
 
+class RuleAction(str, Enum):
+    allow = "allow"
+    prompt = "prompt"
+    deny = "deny"
+
+
+class CommandRules(BaseModel):
+    read: RuleAction = RuleAction.allow
+    write: RuleAction = RuleAction.allow
+    delete: RuleAction = RuleAction.allow
+    database_read: RuleAction = RuleAction.allow
+    database_write: RuleAction = RuleAction.allow
+    database_delete: RuleAction = RuleAction.allow
+    credentials: RuleAction = RuleAction.allow
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_database(cls, data):
+        if not isinstance(data, dict):
+            return data
+        old = data.pop("database", None)
+        if old is not None:
+            for key in ("database_read", "database_write", "database_delete"):
+                data.setdefault(key, old)
+        return data
+
+
 def as_auth_method(value: AuthMethod | str) -> AuthMethod:
     if isinstance(value, AuthMethod):
         return value
@@ -45,6 +72,8 @@ class Connection(BaseModel):
 
     id: str = Field(default_factory=lambda: uuid4().hex)
     name: str
+    description: str = ""
+    icon: str = ""
     host: str
     port: int = 22
     username: str
@@ -70,7 +99,10 @@ class Connection(BaseModel):
     has_docker: bool = False
     docker_container: str = ""
     notes: str = ""
+    enabled: bool = True
+    hide_disabled_prompt: bool = False
     llm_exports: list[LlmExport] = Field(default_factory=list)
+    rules: CommandRules = Field(default_factory=CommandRules)
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -100,6 +132,7 @@ class AppSettings(BaseModel):
     vpn_check_host: str = ""
     vpn_check_port: int = 443
     theme: str = "dark"
+    language: str = "pt"
     path_installed: bool = False
     agent_paths: dict[str, str] = Field(default_factory=dict)
 

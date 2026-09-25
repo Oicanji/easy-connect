@@ -3,13 +3,15 @@ from __future__ import annotations
 import socket
 import time
 
+from easy_connect.i18n import t
+
 
 def check_tcp(host: str, port: int, timeout: float) -> tuple[bool, str]:
     try:
         with socket.create_connection((host, port), timeout=timeout):
             return True, "ok"
     except socket.timeout:
-        return False, f"Tempo esgotado ao conectar em {host}:{port}."
+        return False, t("net.timeout", host=host, port=port)
     except OSError as exc:
         return False, str(exc)
 
@@ -24,16 +26,10 @@ def validate_connection(
     if vpn_host.strip():
         ok, error = check_tcp(vpn_host.strip(), vpn_port, timeout)
         if not ok:
-            return False, (
-                "Não foi possível validar a VPN "
-                f"({vpn_host}:{vpn_port}). Conecte-se à VPN e tente de novo."
-            )
+            return False, t("net.vpn", host=vpn_host, port=vpn_port)
     ok, error = check_tcp(host, port, timeout)
     if not ok:
-        return False, (
-            "Não foi possível alcançar a VM. "
-            "Conecte-se à VPN e tente de novo."
-        )
+        return False, t("net.vm")
     return True, "ok"
 
 
@@ -56,12 +52,11 @@ def wait_until_reachable(
         )
         if ok:
             if attempt > 1:
-                print("Rede disponível. Conectando...", flush=True)
+                print(t("net.ready"), flush=True)
             return
         print(message, flush=True)
         print(
-            f"Tentativa {attempt}. Conecte-se à VPN. "
-            f"Tentando de novo em {int(interval)}s... (Ctrl+C para cancelar)",
+            t("net.retry", attempt=attempt, seconds=int(interval)),
             flush=True,
         )
         time.sleep(interval)

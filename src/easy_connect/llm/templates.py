@@ -8,6 +8,7 @@ from pathlib import Path
 from easy_connect.core.commands import invoke_command
 from easy_connect.core.models import Connection, LlmExport, as_llm_kind
 from easy_connect.core.paths import is_windows
+from easy_connect.i18n import t
 
 LlmKind = Literal["claude", "cursor", "antigravity"]
 
@@ -42,7 +43,7 @@ def write_instruction(kind: LlmKind, connection: Connection, path: str | Path) -
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(build_instruction(kind, connection), encoding="utf-8")
     if not output.is_file():
-        raise OSError("O arquivo não foi gravado no disco.")
+        raise OSError(t("export.write_failed"))
     return output
 
 
@@ -86,6 +87,13 @@ def _slug(value: str) -> str:
     return slug or "vm"
 
 
+def _purpose(connection: Connection) -> str:
+    text = connection.description.strip()
+    if not text:
+        return ""
+    return f"\n## Description\n\n{text}\n"
+
+
 def _body(connection: Connection) -> str:
     command = connection.command
     target = f"{connection.username}@{connection.host}:{connection.port}"
@@ -119,8 +127,9 @@ def _body(connection: Connection) -> str:
         remote_many = f'{command} "pwd; ls /opt"'
         not_found = "If the command is not found, open a new terminal so PATH is reloaded."
 
+    purpose = _purpose(connection)
     return f"""# VM access — {connection.name}
-
+{purpose}
 Open this VM only with `{command}`. Never call `easy-connect-cli`, `Invoke-EasyConnectNative`, or a raw `ssh user@host`. Never ask for a password or pass identity files.
 
 - Connection: `{connection.name}`

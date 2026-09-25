@@ -36,12 +36,12 @@ def copy_icon(color: str = "#6b7380") -> QIcon:
     return _paint_icon(18, draw)
 
 
-def plus_icon(color: str = "#c5ced6") -> QIcon:
+def duplicate_icon(color: str = "#c5ced6") -> QIcon:
     def draw(painter: QPainter, size: int) -> None:
-        painter.setPen(QPen(QColor(color), 1.6))
-        mid = size // 2
-        painter.drawLine(mid, 4, mid, size - 4)
-        painter.drawLine(4, mid, size - 4, mid)
+        painter.setPen(QPen(QColor(color), 1.4))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(QRect(6, 3, 9, 10), 1.5, 1.5)
+        painter.drawRoundedRect(QRect(3, 6, 9, 10), 1.5, 1.5)
 
     return _paint_icon(18, draw)
 
@@ -188,6 +188,45 @@ def copy_to_clipboard(text: str) -> None:
     clipboard = QApplication.clipboard()
     if clipboard is not None:
         clipboard.setText(text)
+
+
+class ToggleSwitch(QWidget):
+    toggled = Signal(bool)
+
+    def __init__(self, checked: bool = True, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._checked = checked
+        self.setFixedSize(40, 22)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("Habilitar conexão")
+
+    def isChecked(self) -> bool:
+        return self._checked
+
+    def setChecked(self, checked: bool) -> None:
+        if self._checked == checked:
+            self.update()
+            return
+        self._checked = checked
+        self.update()
+        self.toggled.emit(checked)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.setChecked(not self._checked)
+        super().mouseReleaseEvent(event)
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        track = QColor("#2f9e8f") if self._checked else QColor("#3a4656")
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(track)
+        painter.drawRoundedRect(QRect(0, 1, 40, 20), 10, 10)
+        knob_x = 22 if self._checked else 2
+        painter.setBrush(QColor("#f4f6f8"))
+        painter.drawEllipse(QRect(knob_x, 3, 16, 16))
+        painter.end()
 
 
 class CopyButton(QPushButton):

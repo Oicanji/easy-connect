@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 
 from easy_connect.core.models import Connection
 from easy_connect.llm.actions import TOOLS
+from easy_connect.i18n import t
 from easy_connect.ui.widgets import paperclip_icon, send_icon, tool_pixmap
 
 
@@ -27,7 +28,7 @@ class PromptEdit(QPlainTextEdit):
         super().__init__(parent)
         self._on_submit = on_submit
         self.setObjectName("PromptEdit")
-        self.setPlaceholderText("Escreva aqui...")
+        self.setPlaceholderText(t("prompt.placeholder"))
         self.setWordWrapMode(QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -112,7 +113,7 @@ class AgentPromptDialog(QDialog):
         attach = QPushButton()
         attach.setObjectName("PromptAttach")
         attach.setIcon(paperclip_icon())
-        attach.setToolTip("Anexar arquivos")
+        attach.setToolTip(t("prompt.attach_tip"))
         attach.setFixedSize(34, 34)
         attach.setCursor(Qt.CursorShape.PointingHandCursor)
         attach.clicked.connect(self._attach)
@@ -124,7 +125,7 @@ class AgentPromptDialog(QDialog):
         send = QPushButton()
         send.setObjectName("Primary")
         send.setIcon(send_icon())
-        send.setToolTip("Enviar")
+        send.setToolTip(t("prompt.send_tip"))
         send.setFixedSize(34, 34)
         send.setCursor(Qt.CursorShape.PointingHandCursor)
         send.clicked.connect(self._submit)
@@ -141,7 +142,7 @@ class AgentPromptDialog(QDialog):
         return list(self._attachments)
 
     def _attach(self) -> None:
-        paths, _ = QFileDialog.getOpenFileNames(self, "Anexar arquivos", str(Path.home()))
+        paths, _ = QFileDialog.getOpenFileNames(self, t("prompt.attach"), str(Path.home()))
         for path in paths:
             if path and path not in self._attachments:
                 self._attachments.append(path)

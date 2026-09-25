@@ -1,19 +1,19 @@
 # Easy Connect
 
-Automatize o acesso seguro às suas VMs: um comando no terminal já autentica, sem expor credenciais. As sessões ficam criptografadas no cofre local, protegidas por senha mestre. No fim, há regras e integrações com LLM.
+Automate secure access to your VMs: one terminal command authenticates without exposing credentials. Sessions stay encrypted in a local vault, protected by a master password. The app also includes command rules and LLM integrations.
 
-Regras de négocio:
+How it works:
 
-- Ao logar pela primeira vez, o usuário deve inserir a senha mestre para criar o cofre local.
-- A senha do cofre local é necessária sempre a conectar pela primeira vez ou utilizar a ferramenta.
-- A ferramenta abstrae conexões complexas em um só comando como `ssh-10-142-0-31` para ser usado em qualquer lugar.
-- Ferramentas de LLM não tem acesso a credenciais e só utilizam do CLI para se conectar.
-- A ferramenta é open source e livre para uso e distribuição.
+- On first launch, set a master password to create the local vault.
+- The vault password is required the first time you connect or use the tool after the computer starts.
+- A complex connection becomes a single command, such as `ssh-10-142-0-31`, that you can run from anywhere.
+- LLM tools never see credentials. They only use the CLI to connect.
+- The tool is open source and free to use and distribute.
 
-Baixe o aplicativo em:
+Download:
 
-- Página de download: [oicanji.github.io/easy-connect](https://oicanji.github.io/easy-connect/)
-- Histórico de versões: [CHANGELOG.md](CHANGELOG.md)
-- Licença: [CC0 1.0](LICENSE)
+- Download page: [oicanji.github.io/easy-connect](https://oicanji.github.io/easy-connect/)
+- Version history: [CHANGELOG.md](CHANGELOG.md)
+- License: [CC0 1.0](LICENSE)
 
-Por Ignacio Sepúlveda.
+By Ignacio Sepúlveda.

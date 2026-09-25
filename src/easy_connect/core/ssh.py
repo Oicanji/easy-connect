@@ -13,6 +13,7 @@ from pathlib import Path
 from easy_connect.core.commands import find_askpass, write_askpass_helper
 from easy_connect.core.models import AuthMethod, Connection, as_auth_method
 from easy_connect.core.paths import is_windows, tmp_dir
+from easy_connect.i18n import t
 
 
 class SshError(Exception):
@@ -27,10 +28,7 @@ def find_ssh() -> str:
         candidate = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "OpenSSH" / "ssh.exe"
         if candidate.is_file():
             return str(candidate)
-    raise SshError(
-        "O cliente OpenSSH não foi encontrado no PATH. "
-        "Instale o OpenSSH e tente de novo."
-    )
+    raise SshError(t("ssh.missing"))
 
 
 def cleanup_tmp(max_age_seconds: int = 3600) -> None:
@@ -189,7 +187,7 @@ def _run_ssh(ssh: str, args: list[str], env: dict[str, str], stdin_prefix: str |
         stderr=None,
     )
     if process.stdin is None:
-        raise SshError("Não foi possível enviar a senha do sudo.")
+        raise SshError(t("ssh.sudo_failed"))
     process.stdin.write((stdin_prefix + "\n").encode("utf-8", errors="replace"))
     process.stdin.flush()
 
@@ -219,8 +217,7 @@ def _apply_askpass(env: dict[str, str], secret_file: Path) -> None:
     askpass = find_askpass()
     if not askpass:
         raise SshError(
-            "Não foi possível preparar o helper de senha SSH. "
-            "Instale o Easy Connect neste Python com pip install -e ."
+            t("ssh.askpass")
         )
     env["EASY_CONNECT_ASKPASS_FILE"] = str(secret_file)
     env["SSH_ASKPASS_REQUIRE"] = "force"
@@ -251,11 +248,11 @@ def _resolve_key_file(connection: Connection) -> Path:
     if connection.private_key_path.strip():
         path = Path(connection.private_key_path).expanduser()
         if not path.is_file():
-            raise SshError(f"Arquivo de chave privada não encontrado: {path}")
+            raise SshError(t("ssh.key_missing", path=path))
         return path
     if connection.private_key_content.strip():
         return _write_secret(connection.private_key_content)
-    raise SshError("Nenhuma chave privada foi configurada para esta conexão.")
+    raise SshError(t("ssh.no_key"))
 
 
 def _cleanup(path: Path | None) -> None:

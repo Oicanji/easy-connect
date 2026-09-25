@@ -6,6 +6,7 @@ from pathlib import Path
 from easy_connect.core import crypto
 from easy_connect.core.models import VaultPayload
 from easy_connect.core.paths import ensure_app_dirs, vault_path
+from easy_connect.i18n import t
 
 
 class VaultError(Exception):
@@ -29,7 +30,7 @@ class Vault:
 
     def create(self, password: str) -> bytes:
         if len(password) < 8:
-            raise VaultError("A senha deve ter pelo menos 8 caracteres.")
+            raise VaultError(t("vault.short_password"))
         ensure_app_dirs()
         salt = crypto.new_salt()
         key = crypto.derive_key(password, salt)
@@ -49,7 +50,7 @@ class Vault:
         try:
             self.load(key)
         except Exception as exc:
-            raise WrongPasswordError("Senha incorreta.") from exc
+            raise WrongPasswordError(t("vault.wrong_password")) from exc
         return key
 
     def load(self, key: bytes) -> VaultPayload:
@@ -68,7 +69,7 @@ class Vault:
 
     def _read_header(self) -> dict:
         if not self.path.is_file():
-            raise VaultNotFoundError("Cofre não encontrado.")
+            raise VaultNotFoundError(t("vault.missing"))
         return json.loads(self.path.read_text(encoding="utf-8"))
 
     def _write(

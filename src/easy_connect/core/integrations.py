@@ -8,6 +8,7 @@ from pathlib import Path
 from easy_connect.core.commands import _ps_quote, invoke_command
 from easy_connect.core.models import Connection
 from easy_connect.core.paths import is_windows, tmp_dir, wrappers_dir
+from easy_connect.i18n import t
 from easy_connect.llm.actions import action_prompt
 
 
@@ -86,7 +87,7 @@ def open_connected_terminal(command: str) -> None:
         if shutil.which(candidate[0]):
             subprocess.Popen(candidate)
             return
-    raise FileNotFoundError("Nenhum terminal foi encontrado.")
+    raise FileNotFoundError(t("term.missing"))
 
 
 def launch_assistant(
@@ -99,7 +100,7 @@ def launch_assistant(
 ) -> str:
     spec = TOOL_CLIS.get(tool)
     if spec is None:
-        return "Não encontrei esse agente."
+        return t("agent.missing")
     prompt = action_prompt(
         action_id,
         connection,
@@ -116,10 +117,7 @@ def launch_assistant(
         return ""
     if cli is None:
         label = TOOL_LABELS.get(tool, tool)
-        return (
-            f"Não encontrei o CLI do {label}. "
-            "Selecione a pasta de instalação em Configurações."
-        )
+        return t("agent.cli_missing", label=label)
     _start_unix_agent(flags, cli, prompt_file)
     return ""
 
@@ -176,7 +174,7 @@ def _start_windows_agent(
         lines.extend(
             [
                 "if (-not $exe) {",
-                f"  Write-Host {_ps_quote('Instalando ' + TOOL_LABELS.get(tool, tool) + ' CLI...')}",
+                f"  Write-Host {_ps_quote(t('agent.installing', label=TOOL_LABELS.get(tool, tool)))}",
                 f"  {spec['install_win']}",
                 "  Refresh-Path",
                 "  $exe = Find-Cli",
@@ -186,13 +184,15 @@ def _start_windows_agent(
     lines.extend(
         [
             "if (-not $exe) {",
-            "  Write-Host 'Nao foi possivel iniciar o agente.'",
-            "  Read-Host 'Pressione Enter para fechar'",
+            f"  Write-Host {_ps_quote(t('agent.start_failed'))}",
+            f"  Read-Host {_ps_quote(t('agent.press_enter'))}",
             "  exit 1",
             "}",
             f"$flags = @({flag_list})" if flag_list else "$flags = @()",
             "& $exe @flags $prompt",
-            "if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { Read-Host 'Pressione Enter para fechar' }",
+            "if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { Read-Host "
+            + _ps_quote(t("agent.press_enter"))
+            + " }",
         ]
     )
     script.write_text("\n".join(lines) + "\n", encoding="utf-8-sig")

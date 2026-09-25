@@ -1,0 +1,8 @@
+delete
+drop
+remove
+purge
+truncate
+erase
+wipe
+destroy

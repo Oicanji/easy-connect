@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
@@ -15,12 +16,15 @@ from PySide6.QtWidgets import (
 
 from easy_connect.core.commands import path_notice, python_display, reinstall_wrappers, wrappers_dir
 from easy_connect.core.session import AppSession
+from easy_connect.i18n import set_language, t
 from easy_connect.llm.actions import TOOLS
+from easy_connect.ui.locale import apply_locale, fill_language_combo
 from easy_connect.ui.styles import apply_theme
 from easy_connect.ui.widgets import CopyButton, FilePicker
 
 
 class SettingsTab(QWidget):
+    language_changed = Signal()
     def __init__(self, session: AppSession) -> None:
         super().__init__()
         self.session = session
@@ -28,7 +32,7 @@ class SettingsTab(QWidget):
         root.setContentsMargins(24, 16, 24, 20)
         root.setSpacing(12)
 
-        title = QLabel("CONFIGURAÇÕES")
+        title = QLabel(t("settings.section"))
         title.setObjectName("Section")
         root.addWidget(title)
 
@@ -41,26 +45,29 @@ class SettingsTab(QWidget):
         self.timeout.setRange(1, 60)
         self.timeout.setValue(session.payload.settings.default_validation_timeout)
         self.vpn_host = QLineEdit(session.payload.settings.vpn_check_host)
-        self.vpn_host.setPlaceholderText("Host opcional para validar VPN")
+        self.vpn_host.setPlaceholderText(t("settings.vpn_placeholder"))
         self.vpn_port = QSpinBox()
         self.vpn_port.setRange(1, 65535)
         self.vpn_port.setValue(session.payload.settings.vpn_check_port)
         self.theme = QComboBox()
-        self.theme.addItem("Escuro", "dark")
-        self.theme.addItem("Claro", "light")
+        self.theme.addItem(t("settings.theme.dark"), "dark")
+        self.theme.addItem(t("settings.theme.light"), "light")
         index = self.theme.findData(session.payload.settings.theme)
         if index >= 0:
             self.theme.setCurrentIndex(index)
+        self.language = QComboBox()
+        fill_language_combo(self.language, session.payload.settings.language)
 
-        form.addRow("Pasta dos comandos", self._with_copy(self.wrappers))
-        form.addRow("Python dos wrappers", self._with_copy(self.python))
-        form.addRow("Timeout padrão (s)", self.timeout)
-        form.addRow("Host de checagem VPN", self.vpn_host)
-        form.addRow("Porta VPN", self.vpn_port)
-        form.addRow("Tema", self.theme)
+        form.addRow(t("settings.commands_dir"), self._with_copy(self.wrappers))
+        form.addRow(t("settings.python"), self._with_copy(self.python))
+        form.addRow(t("settings.timeout"), self.timeout)
+        form.addRow(t("settings.vpn_host"), self.vpn_host)
+        form.addRow(t("settings.vpn_port"), self.vpn_port)
+        form.addRow(t("settings.theme"), self.theme)
+        form.addRow(t("settings.language"), self.language)
         root.addLayout(form)
 
-        agents = QLabel("AGENTES")
+        agents = QLabel(t("settings.agents"))
         agents.setObjectName("Section")
         root.addWidget(agents)
 
@@ -69,8 +76,8 @@ class SettingsTab(QWidget):
         self._agent_pickers: dict[str, FilePicker] = {}
         for tool_id, tool_label in TOOLS:
             picker = FilePicker(
-                "Pasta de instalação",
-                f"Selecionar pasta do {tool_label}",
+                t("settings.agent_placeholder"),
+                t("settings.agent_caption", label=tool_label),
                 directory=True,
             )
             picker.set_path(str(saved_paths.get(tool_id) or ""))
@@ -78,27 +85,21 @@ class SettingsTab(QWidget):
             agent_form.addRow(tool_label, picker)
         root.addLayout(agent_form)
 
-        agent_hint = QLabel(
-            "Se o Easy Connect não achar o CLI no PATH, selecione a pasta onde o "
-            "programa está instalado. O prompt continua copiado para colar no chat."
-        )
+        agent_hint = QLabel(t("settings.agent_hint"))
         agent_hint.setObjectName("Hint")
         agent_hint.setWordWrap(True)
         root.addWidget(agent_hint)
 
-        hint = QLabel(
-            "Terminais já abertos não veem um PATH novo. Feche e abra o terminal "
-            "depois de instalar o primeiro comando."
-        )
+        hint = QLabel(t("settings.path_hint"))
         hint.setObjectName("Hint")
         hint.setWordWrap(True)
         root.addWidget(hint)
 
         buttons = QHBoxLayout()
-        save = QPushButton("Salvar configurações")
+        save = QPushButton(t("settings.save"))
         save.setObjectName("Primary")
         save.clicked.connect(self._save)
-        reinstall = QPushButton("Reinstalar comandos no PATH")
+        reinstall = QPushButton(t("settings.reinstall"))
         reinstall.clicked.connect(self._reinstall)
         buttons.addWidget(save)
         buttons.addWidget(reinstall)
@@ -125,10 +126,13 @@ class SettingsTab(QWidget):
 
     def _save(self) -> None:
         settings = self.session.payload.settings
+        previous_language = settings.language
         settings.default_validation_timeout = int(self.timeout.value())
         settings.vpn_check_host = self.vpn_host.text().strip()
         settings.vpn_check_port = int(self.vpn_port.value())
         settings.theme = self.theme.currentData()
+        settings.language = str(self.language.currentData() or "pt")
+        set_language(settings.language)
         settings.agent_paths = {
             tool_id: picker.path() for tool_id, picker in self._agent_pickers.items()
         }
@@ -137,8 +141,11 @@ class SettingsTab(QWidget):
 
         app = QApplication.instance()
         if app is not None:
+            apply_locale(app)
             apply_theme(app, settings.theme)
-        QMessageBox.information(self, "Easy Connect", "Configurações salvas.")
+        QMessageBox.information(self, "Easy Connect", t("settings.saved"))
+        if settings.language != previous_language:
+            self.language_changed.emit()
 
     def _reinstall(self) -> None:
         commands = [item.command for item in self.session.payload.connections]

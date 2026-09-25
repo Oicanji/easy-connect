@@ -1,0 +1,10 @@
+insert
+update
+modify
+create
+alter
+add
+upsert
+replace
+merge
+rollback

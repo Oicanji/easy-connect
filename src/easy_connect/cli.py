@@ -6,10 +6,14 @@ import sys
 import time
 
 from easy_connect.core import keyring_store
-from easy_connect.core.paths import gui_unlock_args
+from easy_connect.core.models import RuleAction
+from easy_connect.core.paths import gui_disabled_connection_args, gui_rule_prompt_args, gui_unlock_args
+from easy_connect.core.rule_session import SESSION_ALLOW_CODE, remember_terminal, terminal_allows
+from easy_connect.core.rules import decide, denial_text
 from easy_connect.core.ssh import SshError, connect
 from easy_connect.core.validators import wait_until_reachable
 from easy_connect.core.vault import Vault, VaultNotFoundError
+from easy_connect.i18n import load_language, t
 
 
 def askpass_main() -> None:
@@ -17,6 +21,7 @@ def askpass_main() -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    load_language()
     if hasattr(sys.stdout, "reconfigure"):
         try:
             sys.stdout.reconfigure(encoding="utf-8")
@@ -61,31 +66,47 @@ def _ensure_key() -> bytes | None:
     key = keyring_store.load_key()
     if key is not None:
         return key
-    print("O Easy Connect está bloqueado. Abrindo a janela de login...", flush=True)
+    print(t("cli.locked"), flush=True)
     try:
         completed = subprocess.run(gui_unlock_args(), check=False)
     except OSError as exc:
-        print(
-            "Não foi possível abrir o Easy Connect para desbloquear.\n"
-            f"{exc}\n"
-            "Abra o aplicativo, informe a senha mestre e tente de novo.",
-            file=sys.stderr,
-        )
+        print(t("cli.unlock_failed", error=exc), file=sys.stderr)
         return None
     if completed.returncode not in {0, None}:
-        print("Login cancelado.", file=sys.stderr)
+        print(t("cli.login_cancelled"), file=sys.stderr)
         return None
     key = keyring_store.load_key()
     if key is None:
-        print(
-            "Ainda bloqueado. Informe a senha mestre na janela do Easy Connect.",
-            file=sys.stderr,
-        )
+        print(t("cli.still_locked"), file=sys.stderr)
     return key
 
 
+def _prompt_disabled(connection) -> bool:
+    if connection.hide_disabled_prompt:
+        return False
+    print(t("cli.disabled_opening"), flush=True)
+    try:
+        completed = subprocess.run(
+            gui_disabled_connection_args(connection.command),
+            check=False,
+        )
+    except OSError as exc:
+        print(t("cli.open_failed", error=exc), file=sys.stderr)
+        return False
+    return completed.returncode == 0
+
+
+def _prompt_rules(command: str, remote: list[str]) -> int:
+    try:
+        completed = subprocess.run(gui_rule_prompt_args(command, remote), check=False)
+    except OSError as exc:
+        print(t("cli.permission_failed", error=exc), file=sys.stderr)
+        return 1
+    return completed.returncode
+
+
 def _connect(command: str, remote: list[str] | None = None) -> int:
-    print("Checando rede...", flush=True)
+    print(t("cli.checking_network"), flush=True)
     key = _ensure_key()
     if key is None:
         return 2
@@ -94,14 +115,10 @@ def _connect(command: str, remote: list[str] | None = None) -> int:
     try:
         payload = vault.load(key)
     except VaultNotFoundError:
-        print("Cofre não encontrado. Abra o Easy Connect e conclua o setup.", file=sys.stderr)
+        print(t("cli.vault_missing"), file=sys.stderr)
         return 2
     except Exception:
-        print(
-            "Não foi possível ler as sessões salvas. "
-            "Abra o Easy Connect e desbloqueie novamente.",
-            file=sys.stderr,
-        )
+        print(t("cli.vault_unreadable"), file=sys.stderr)
         return 2
 
     connection = None
@@ -110,13 +127,45 @@ def _connect(command: str, remote: list[str] | None = None) -> int:
             connection = item
             break
     if connection is None:
-        print(f"Nenhuma conexão encontrada para o comando '{command}'.", file=sys.stderr)
+        print(t("cli.connection_missing", command=command), file=sys.stderr)
         return 1
+
+    if not connection.enabled:
+        allowed = _prompt_disabled(connection)
+        if not allowed:
+            print(t("cli.denied"), file=sys.stderr)
+            return 1
+        try:
+            payload = vault.load(key)
+        except Exception:
+            print(t("cli.denied"), file=sys.stderr)
+            return 1
+        connection = None
+        for item in payload.connections:
+            if item.command == command:
+                connection = item
+                break
+        if connection is None or not connection.enabled:
+            print(t("cli.denied"), file=sys.stderr)
+            return 1
+
+    if remote:
+        action, rule_ids = decide(connection.rules, remote)
+        if action == RuleAction.deny:
+            print(denial_text(rule_ids), file=sys.stderr)
+            return 1
+        if action == RuleAction.prompt and not terminal_allows():
+            answer = _prompt_rules(connection.command, remote)
+            if answer == SESSION_ALLOW_CODE:
+                remember_terminal()
+            elif answer != 0:
+                print(denial_text(rule_ids), file=sys.stderr)
+                return 1
 
     timeout = connection.validation_timeout or payload.settings.default_validation_timeout
     try:
         while True:
-            print(f"Checando acesso a {connection.host}:{connection.port}...", flush=True)
+            print(t("cli.checking_host", host=connection.host, port=connection.port), flush=True)
             wait_until_reachable(
                 connection.host,
                 connection.port,
@@ -124,15 +173,12 @@ def _connect(command: str, remote: list[str] | None = None) -> int:
                 vpn_host=payload.settings.vpn_check_host,
                 vpn_port=payload.settings.vpn_check_port,
             )
-            print("Conectando...", flush=True)
+            print(t("cli.connecting"), flush=True)
             try:
                 connect(connection, remote)
             except SshError as exc:
                 print(str(exc), flush=True)
-                print(
-                    "Falha ao abrir o SSH. Tentando de novo em 3s... (Ctrl+C para cancelar)",
-                    flush=True,
-                )
+                print(t("cli.ssh_retry"), flush=True)
                 time.sleep(3)
                 continue
             except SystemExit as exc:
@@ -141,14 +187,10 @@ def _connect(command: str, remote: list[str] | None = None) -> int:
                     return 0
                 if remote and code != 255:
                     return code
-                print(
-                    "Não foi possível entrar na VM. "
-                    "Tentando de novo em 3s... (Ctrl+C para cancelar)",
-                    flush=True,
-                )
+                print(t("cli.vm_retry"), flush=True)
                 time.sleep(3)
     except KeyboardInterrupt:
-        print("\nCancelado.", flush=True)
+        print(t("cli.cancelled"), flush=True)
         return 130
     return 0
 

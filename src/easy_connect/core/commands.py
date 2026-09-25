@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 
 from easy_connect import __version__
+from easy_connect.i18n import t
 from easy_connect.core.paths import (
     askpass_script_path,
     cli_executable,
@@ -118,16 +119,8 @@ def ensure_user_path() -> bool:
 def path_notice() -> str:
     folder = str(wrappers_dir())
     if is_windows():
-        return (
-            f"O comando foi instalado em {folder}. "
-            "No PowerShell do Cursor, o módulo EasyConnect também é registrado. "
-            "Se o comando curto falhar, use o caminho completo do .cmd."
-        )
-    return (
-        f"O comando foi instalado em {folder}. "
-        "Se o terminal não reconhecer o comando, feche e abra o terminal "
-        "ou execute: source ~/.profile"
-    )
+        return t("path.notice.windows", folder=folder)
+    return t("path.notice.linux", folder=folder)
 
 
 def write_askpass_helper() -> None:

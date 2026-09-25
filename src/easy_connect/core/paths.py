@@ -99,6 +99,23 @@ def gui_unlock_args() -> list[str]:
     return [python_path(), "-m", "easy_connect.app", "--unlock"]
 
 
+def gui_disabled_connection_args(command: str) -> list[str]:
+    if is_frozen():
+        return [gui_executable(), "--disabled-connection", command]
+    return [python_path(), "-m", "easy_connect.app", "--disabled-connection", command]
+
+
+def gui_rule_prompt_args(command: str, remote: list[str]) -> list[str]:
+    if is_frozen():
+        args = [gui_executable(), "--rule-prompt", command]
+    else:
+        args = [python_path(), "-m", "easy_connect.app", "--rule-prompt", command]
+    if remote:
+        args.append("--")
+        args.extend(remote)
+    return args
+
+
 def package_search_path() -> Path:
     if is_frozen():
         return install_dir()

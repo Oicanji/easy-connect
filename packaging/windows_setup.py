@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 APP_NAME = "Easy Connect"
-APP_VERSION = "1.0.2"
+APP_VERSION = "1.1.0"
 PUBLISHER = "Easy Connect"
 EXE_NAME = "EasyConnect.exe"
 UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\EasyConnect"
